@@ -150,7 +150,7 @@ public class ServerProxy {
                 throw new MalformedURLException("Invalid port number");
             }
             DataCache dataCache = DataCache.getInstance();
-            URL url = new URL("HTTP", host, Integer.parseInt(port), "person/");
+            URL url = new URL("HTTP", host, Integer.parseInt(port), "event/");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Authorization", dataCache.getAuthToken().getToken());
@@ -160,7 +160,7 @@ public class ServerProxy {
                 Gson gson = new Gson();
                 InputStream is = connection.getInputStream();
                 InputStreamReader reader = new InputStreamReader(is);
-                Log.d("Persons", "Response stream closed");
+                Log.d("Events", "Response stream closed");
                 EventResult result = gson.fromJson(reader, EventResult.class);
                 is.close();
                 return result;
@@ -171,7 +171,7 @@ public class ServerProxy {
             }
         }
         catch (IOException e) {
-            Log.e("Persons", e.getMessage(), e);
+            Log.e("Events", e.getMessage(), e);
             return new EventResult(null,
                     "Invalid URL", false);
         }

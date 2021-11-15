@@ -26,8 +26,8 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
     }
 
     private boolean loggedIn() {
-        // TODO: Implement function
-        return false;
+        DataCache dataCache = DataCache.getInstance();
+        return dataCache.getAuthToken() != null;
     }
 
     private Fragment createLoginFragment() {
