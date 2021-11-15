@@ -21,7 +21,9 @@ import java.util.concurrent.Executors;
 
 import model.AuthToken;
 import model.User;
+import request.LoginRequest;
 import request.RegisterRequest;
+import result.LoginResult;
 import result.RegisterResult;
 
 /**
@@ -89,12 +91,58 @@ public class LoginFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         Button loginButton = view.findViewById(R.id.loginButton);
         Button registerButton = view.findViewById(R.id.registerButton);
-
+        Context currentContext = getContext();
         Log.d("Login", "About to set onClickListeners...");
 
         loginButton.setOnClickListener(v -> {
-            Toast.makeText(getActivity(), "Logging in...", Toast.LENGTH_LONG).show();
-            //TODO: handle login
+            Log.d("Login", "Register button pressed!");
+            EditText editText = view.findViewById(R.id.hostField);
+            String host = editText.getText().toString();
+            editText = view.findViewById(R.id.portField);
+            String port = editText.getText().toString();
+            editText = view.findViewById(R.id.usernameField);
+            String username = editText.getText().toString();
+            editText = view.findViewById(R.id.passwordField);
+            String password = editText.getText().toString();
+            editText = view.findViewById(R.id.firstNameField);
+            String firstName = editText.getText().toString();
+            editText = view.findViewById(R.id.lastNameField);
+            String lastName = editText.getText().toString();
+            editText = view.findViewById(R.id.emailField);
+            String email = editText.getText().toString();
+            String gender = null;
+            RadioGroup rg = view.findViewById(R.id.genderSelection);
+
+            int radioButtonID = rg.getCheckedRadioButtonId();
+            if (radioButtonID == R.id.male) {
+                gender = "m";
+            }
+            else if (radioButtonID == R.id.female) {
+                gender = "f";
+            }
+            LoginData loginData = new LoginData(host, port, username, password, firstName,
+                    lastName, email, gender);
+
+            Handler uiThreadHandler = new Handler() {
+                @Override
+                public void handleMessage(Message message) {
+                    Bundle bundle = message.getData();
+                    String status = bundle.getString(STATUS_KEY);
+                    Log.d("Login", "Handling login message...");
+                    if (status != null && status.equals("success")) {
+                        Toast.makeText(currentContext, bundle.getString(FIRST_NAME_KEY) + " " +
+                                bundle.getString(LAST_NAME_KEY), Toast.LENGTH_LONG);
+                    }
+                    else {
+                        Log.d("Login", "About to send login failure toast...");
+                        Toast.makeText(currentContext, "Login failed", Toast.LENGTH_LONG);
+                    }
+                }
+            };
+
+            LoginTask loginTask = new LoginTask(uiThreadHandler, loginData);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(loginTask);
         });
 
         registerButton.setOnClickListener(v -> {
@@ -126,30 +174,79 @@ public class LoginFragment extends Fragment {
             }
             LoginData loginData = new LoginData(host, port, username, password, firstName,
                     lastName, email, gender);
-            Context currentContext = getActivity();
+
             Handler uiThreadHandler = new Handler() {
                 @Override
                 public void handleMessage(Message message) {
                     Bundle bundle = message.getData();
                     String status = bundle.getString(STATUS_KEY);
-                    Log.d("Login", "Handling register message");
+                    Log.d("Register", "Handling register message...");
                     if (status != null && status.equals("success")) {
                         Toast.makeText(currentContext, bundle.getString(FIRST_NAME_KEY) + " " +
                                 bundle.getString(LAST_NAME_KEY), Toast.LENGTH_LONG);
                     }
                     else {
+                        Log.d("Register", "About to send failure toast...");
                         Toast.makeText(currentContext, "Register failed", Toast.LENGTH_LONG);
                     }
                 }
             };
 
-            RegisterTask task = new RegisterTask(uiThreadHandler, loginData);
+            RegisterTask registerTask = new RegisterTask(uiThreadHandler, loginData);
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(task);
+            executor.submit(registerTask);
         });
 
 
         return view;
+    }
+
+    private static class LoginTask implements Runnable {
+        private final Handler handler;
+        private final LoginData loginData;
+
+        public LoginTask(Handler handler, LoginData loginData) {
+            this.handler = handler;
+            this.loginData = loginData;
+        }
+
+        @Override
+        public void run() {
+            LoginRequest request = new LoginRequest(loginData.username, loginData.password);
+            ServerProxy proxy = new ServerProxy();
+            LoginResult result = proxy.login(request, loginData.host, loginData.port);
+            if (result == null) {
+                //FIXME
+                sendMessage(new LoginResult(null, null, null,
+                        "Null result", false));
+            }
+            Log.d("Login", String.format("Login result: %s, %s",
+                    result.isSuccess()?"success":"failure", result.getMessage()));
+            if (result.isSuccess()) {
+                DataCache dataCache = DataCache.getInstance();
+                dataCache.setUser(new User(result.getUsername(), loginData.password, loginData.email,
+                        loginData.firstName, loginData.lastName, loginData.gender,
+                        result.getPersonID()));
+                dataCache.setAuthToken(new AuthToken(result.getAuthtoken(), result.getUsername()));
+            }
+            Log.d("Register", "About to send register message...");
+            sendMessage(result);
+        }
+
+        private void sendMessage(LoginResult result) {
+            Message message = Message.obtain();
+            Bundle messageBundle = new Bundle();
+            if (!result.isSuccess()) {
+                messageBundle.putString(STATUS_KEY, result.isSuccess() ? "success" : "failure");
+            }
+            else {
+                DataCache dataCache = DataCache.getInstance();
+                messageBundle.putString(FIRST_NAME_KEY, dataCache.getUser().getFirstName());
+                messageBundle.putString(LAST_NAME_KEY, dataCache.getUser().getLastName());
+            }
+            message.setData(messageBundle);
+            handler.sendMessage(message);
+        }
     }
 
     private static class RegisterTask implements Runnable {
@@ -167,7 +264,7 @@ public class LoginFragment extends Fragment {
                     loginData.email, loginData.firstName, loginData.lastName, loginData.gender);
             ServerProxy proxy = new ServerProxy();
             RegisterResult result = proxy.register(request, loginData.host, loginData.port);
-            Log.d("Login", String.format("Register result: %s, %s",
+            Log.d("Register", String.format("Register result: %s, %s",
                     result.isSuccess()?"success":"failure", result.getMessage()));
             if (result.isSuccess()) {
                 DataCache dataCache = DataCache.getInstance();
@@ -176,7 +273,7 @@ public class LoginFragment extends Fragment {
                         result.getPersonID()));
                 dataCache.setAuthToken(new AuthToken(result.getAuthtoken(), result.getUsername()));
             }
-            Log.d("Login", "About to send register message...");
+            Log.d("Register", "About to send register message...");
             sendMessage(result);
         }
 
