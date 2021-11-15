@@ -216,9 +216,9 @@ public class LoginFragment extends Fragment {
             ServerProxy proxy = new ServerProxy();
             LoginResult result = proxy.login(request, loginData.host, loginData.port);
             if (result == null) {
-                //FIXME
                 sendMessage(new LoginResult(null, null, null,
                         "Null result", false));
+                return;
             }
             Log.d("Login", String.format("Login result: %s, %s",
                     result.isSuccess()?"success":"failure", result.getMessage()));
@@ -264,6 +264,11 @@ public class LoginFragment extends Fragment {
                     loginData.email, loginData.firstName, loginData.lastName, loginData.gender);
             ServerProxy proxy = new ServerProxy();
             RegisterResult result = proxy.register(request, loginData.host, loginData.port);
+            if (result == null) {
+                sendMessage(new RegisterResult(null, null, null,
+                        false, "Null result"));
+                return;
+            }
             Log.d("Register", String.format("Register result: %s, %s",
                     result.isSuccess()?"success":"failure", result.getMessage()));
             if (result.isSuccess()) {

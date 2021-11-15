@@ -5,10 +5,12 @@ import android.util.Log;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,26 +35,24 @@ public class ServerProxy {
             URL url = new URL("HTTP", host, Integer.parseInt(port), "user/register");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.addRequestProperty("Accept", "application/json");
             connection.connect();
 
             Gson gson = new Gson();
             String jsonRequest = gson.toJson(request);
             OutputStream os = connection.getOutputStream();
+
             os.write(jsonRequest.getBytes(StandardCharsets.UTF_8));
             os.close();
 
-            Log.d("Register", "Opening response stream...");
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(connection.getInputStream()));
-            String jsonResponse = null;
-            while (reader.ready()) {
-                jsonResponse = reader.readLine();
-            }
-            reader.close();
-            Log.d("Register", "Response stream closed");
-            RegisterResult result = gson.fromJson(jsonResponse, RegisterResult.class);
-
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                Log.d("Register", "Opening response stream...");
+                InputStream is = connection.getInputStream();
+                InputStreamReader reader = new InputStreamReader(is);
+                RegisterResult result = gson.fromJson(reader, RegisterResult.class);
+                Log.d("Register", "Response stream closed");
+                is.close();
                 return result;
             }
             else {
@@ -75,26 +75,25 @@ public class ServerProxy {
             if (port == null || port.isEmpty()) {
                 throw new MalformedURLException("Invalid port number");
             }
-            Gson gson = new Gson();
-            String jsonRequest = gson.toJson(request);
             URL url = new URL("HTTP", host, Integer.parseInt(port), "user/login");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.addRequestProperty("Accept", "application/json");
+            connection.connect();
+
+            Gson gson = new Gson();
+            String jsonRequest = gson.toJson(request);
             OutputStream os = connection.getOutputStream();
             os.write(jsonRequest.getBytes(StandardCharsets.UTF_8));
             os.close();
 
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(connection.getInputStream()));
-            String jsonResponse = null;
-            while (reader.ready()) {
-                jsonResponse = reader.readLine();
-            }
-            reader.close();
-            Log.d("Login", "Response stream closed");
-            LoginResult result = gson.fromJson(jsonResponse, LoginResult.class);
-
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                InputStream is = connection.getInputStream();
+                InputStreamReader reader = new InputStreamReader(is);
+                Log.d("Login", "Response stream closed");
+                LoginResult result = gson.fromJson(reader, LoginResult.class);
+                is.close();
                 return result;
             }
             else {
@@ -109,11 +108,11 @@ public class ServerProxy {
         }
     }
 
-    PersonResult persons() {
+    public PersonResult persons() {
         return null;
     }
 
-    EventResult events() {
+    public EventResult events() {
         return null;
     }
 }
