@@ -23,7 +23,9 @@ import model.AuthToken;
 import model.User;
 import request.LoginRequest;
 import request.RegisterRequest;
+import result.EventResult;
 import result.LoginResult;
+import result.PersonResult;
 import result.RegisterResult;
 
 /**
@@ -280,6 +282,10 @@ public class LoginFragment extends Fragment {
             }
             Log.d("Register", "About to send register message...");
             sendMessage(result);
+
+            DataTask dataTask = new DataTask(loginData.host, loginData.port);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(dataTask);
         }
 
         private void sendMessage(RegisterResult result) {
@@ -296,6 +302,35 @@ public class LoginFragment extends Fragment {
             message.setData(messageBundle);
             handler.sendMessage(message);
         }
+    }
+
+    private static class DataTask implements Runnable {
+        private final String host;
+        private final String port;
+
+        public DataTask(String host, String port) {
+            this.host = host;
+            this.port = port;
+        }
+
+        @Override
+        public void run() {
+            DataCache dataCache = DataCache.getInstance();
+            ServerProxy proxy = new ServerProxy();
+            PersonResult personResult = proxy.persons(host, port);
+            if (personResult == null) {
+                return;
+            }
+            Log.d("Data", String.format("Persons result: %s, %s",
+                    personResult.isSuccess()?"success":"failure", personResult.getMessage()));
+            if (personResult.isSuccess()) {
+                dataCache.setPersons(personResult.getData());
+            }
+            else {
+                Log.d("Data", "Unable to download user data from server");
+            }
+        }
+
     }
 
     private static class LoginData {

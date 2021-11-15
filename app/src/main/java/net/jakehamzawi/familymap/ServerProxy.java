@@ -108,8 +108,43 @@ public class ServerProxy {
         }
     }
 
-    public PersonResult persons() {
-        return null;
+    public PersonResult persons(String host, String port) {
+        try {
+            if (host == null || host.isEmpty()) {
+                throw new MalformedURLException("Invalid host");
+            }
+            if (port == null || port.isEmpty()) {
+                throw new MalformedURLException("Invalid port number");
+            }
+            DataCache dataCache = DataCache.getInstance();
+            URL url = new URL("HTTP", host, Integer.parseInt(port),
+                    "person/" + dataCache.getUser().getUsername());
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setDoOutput(true);
+            connection.addRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Authorization", dataCache.getAuthToken().getToken());
+            connection.connect();
+
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                Gson gson = new Gson();
+                InputStream is = connection.getInputStream();
+                InputStreamReader reader = new InputStreamReader(is);
+                Log.d("Persons", "Response stream closed");
+                PersonResult result = gson.fromJson(reader, PersonResult.class);
+                is.close();
+                return result;
+            }
+            else {
+                return new PersonResult(null,
+                        "Unable to connect to server", false);
+            }
+        }
+        catch (IOException e) {
+            Log.e("Persons", e.getMessage(), e);
+            return new PersonResult(null,
+                    "Invalid URL", false);
+        }
     }
 
     public EventResult events() {
