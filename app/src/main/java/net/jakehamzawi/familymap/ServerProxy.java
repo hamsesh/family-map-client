@@ -117,12 +117,9 @@ public class ServerProxy {
                 throw new MalformedURLException("Invalid port number");
             }
             DataCache dataCache = DataCache.getInstance();
-            URL url = new URL("HTTP", host, Integer.parseInt(port),
-                    "person/" + dataCache.getUser().getUsername());
+            URL url = new URL("HTTP", host, Integer.parseInt(port), "person/");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            connection.setDoOutput(true);
-            connection.addRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Authorization", dataCache.getAuthToken().getToken());
             connection.connect();
 
@@ -147,7 +144,39 @@ public class ServerProxy {
         }
     }
 
-    public EventResult events() {
-        return null;
+    public EventResult events(String host, String port) {
+        try {
+            if (host == null || host.isEmpty()) {
+                throw new MalformedURLException("Invalid host");
+            }
+            if (port == null || port.isEmpty()) {
+                throw new MalformedURLException("Invalid port number");
+            }
+            DataCache dataCache = DataCache.getInstance();
+            URL url = new URL("HTTP", host, Integer.parseInt(port), "person/");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", dataCache.getAuthToken().getToken());
+            connection.connect();
+
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                Gson gson = new Gson();
+                InputStream is = connection.getInputStream();
+                InputStreamReader reader = new InputStreamReader(is);
+                Log.d("Persons", "Response stream closed");
+                EventResult result = gson.fromJson(reader, EventResult.class);
+                is.close();
+                return result;
+            }
+            else {
+                return new EventResult(null,
+                        "Unable to connect to server", false);
+            }
+        }
+        catch (IOException e) {
+            Log.e("Persons", e.getMessage(), e);
+            return new EventResult(null,
+                    "Invalid URL", false);
+        }
     }
 }
