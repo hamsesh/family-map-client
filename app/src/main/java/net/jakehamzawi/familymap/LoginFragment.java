@@ -1,15 +1,28 @@
 package net.jakehamzawi.familymap;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import model.AuthToken;
+import model.User;
+import request.RegisterRequest;
+import result.RegisterResult;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -30,6 +43,9 @@ public class LoginFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    private static final String FIRST_NAME_KEY = "firstName";
+    private static final String LAST_NAME_KEY = "lastName";
+    private static final String STATUS_KEY = "success";
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -76,22 +92,130 @@ public class LoginFragment extends Fragment {
 
         Log.d("Login", "About to set onClickListeners...");
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "Logging in...", Toast.LENGTH_LONG).show();
-                //TODO: handle login
-            }
+        loginButton.setOnClickListener(v -> {
+            Toast.makeText(getActivity(), "Logging in...", Toast.LENGTH_LONG).show();
+            //TODO: handle login
         });
 
-        registerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "Registering user...", Toast.LENGTH_LONG).show();
-                Log.d("Login", "Register button pressed!");
-                //TODO: handle register
+        registerButton.setOnClickListener(v -> {
+
+            Log.d("Login", "Register button pressed!");
+            EditText editText = view.findViewById(R.id.hostField);
+            String host = editText.getText().toString();
+            editText = view.findViewById(R.id.portField);
+            String port = editText.getText().toString();
+            editText = view.findViewById(R.id.usernameField);
+            String username = editText.getText().toString();
+            editText = view.findViewById(R.id.passwordField);
+            String password = editText.getText().toString();
+            editText = view.findViewById(R.id.firstNameField);
+            String firstName = editText.getText().toString();
+            editText = view.findViewById(R.id.lastNameField);
+            String lastName = editText.getText().toString();
+            editText = view.findViewById(R.id.emailField);
+            String email = editText.getText().toString();
+            String gender = null;
+            RadioGroup rg = view.findViewById(R.id.genderSelection);
+
+            int radioButtonID = rg.getCheckedRadioButtonId();
+            if (radioButtonID == R.id.male) {
+                gender = "m";
             }
+            else if (radioButtonID == R.id.female) {
+                gender = "f";
+            }
+            LoginData loginData = new LoginData(host, port, username, password, firstName,
+                    lastName, email, gender);
+            Context currentContext = getActivity();
+            Handler uiThreadHandler = new Handler() {
+                @Override
+                public void handleMessage(Message message) {
+                    Bundle bundle = message.getData();
+                    String status = bundle.getString(STATUS_KEY);
+                    Log.d("Login", "Handling register message");
+                    if (status != null && status.equals("success")) {
+                        Toast.makeText(currentContext, bundle.getString(FIRST_NAME_KEY) + " " +
+                                bundle.getString(LAST_NAME_KEY), Toast.LENGTH_LONG);
+                    }
+                    else {
+                        Toast.makeText(currentContext, "Register failed", Toast.LENGTH_LONG);
+                    }
+                }
+            };
+
+            RegisterTask task = new RegisterTask(uiThreadHandler, loginData);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(task);
         });
-        return inflater.inflate(R.layout.fragment_login, container, false);
+
+
+        return view;
+    }
+
+    private static class RegisterTask implements Runnable {
+        private final Handler handler;
+        private final LoginData loginData;
+
+        public RegisterTask(Handler handler, LoginData loginData) {
+            this.handler = handler;
+            this.loginData = loginData;
+        }
+
+        @Override
+        public void run() {
+            RegisterRequest request = new RegisterRequest(loginData.username, loginData.password,
+                    loginData.email, loginData.firstName, loginData.lastName, loginData.gender);
+            ServerProxy proxy = new ServerProxy();
+            RegisterResult result = proxy.register(request, loginData.host, loginData.port);
+            Log.d("Login", String.format("Register result: %s, %s",
+                    result.isSuccess()?"success":"failure", result.getMessage()));
+            if (result.isSuccess()) {
+                DataCache dataCache = DataCache.getInstance();
+                dataCache.setUser(new User(result.getUsername(), loginData.password, loginData.email,
+                        loginData.firstName, loginData.lastName, loginData.gender,
+                        result.getPersonID()));
+                dataCache.setAuthToken(new AuthToken(result.getAuthtoken(), result.getUsername()));
+            }
+            Log.d("Login", "About to send register message...");
+            sendMessage(result);
+        }
+
+        private void sendMessage(RegisterResult result) {
+            Message message = Message.obtain();
+            Bundle messageBundle = new Bundle();
+            if (!result.isSuccess()) {
+                messageBundle.putString(STATUS_KEY, result.isSuccess() ? "success" : "failure");
+            }
+            else {
+                DataCache dataCache = DataCache.getInstance();
+                messageBundle.putString(FIRST_NAME_KEY, dataCache.getUser().getFirstName());
+                messageBundle.putString(LAST_NAME_KEY, dataCache.getUser().getLastName());
+            }
+            message.setData(messageBundle);
+            handler.sendMessage(message);
+        }
+    }
+
+    private static class LoginData {
+        private final String host;
+        private final String port;
+        private final String username;
+        private final String password;
+        private final String firstName;
+        private final String lastName;
+        private final String email;
+        private final String gender;
+
+        public LoginData(String host, String port, String username, String password,
+                         String firstName, String lastName, String email, String gender) {
+            this.host = host;
+            this.port = port;
+            this.username = username;
+            this.password = password;
+            this. firstName = firstName;
+            this. lastName = lastName;
+            this.email = email;
+            this.gender = gender;
+        }
     }
 }

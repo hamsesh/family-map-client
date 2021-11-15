@@ -133,18 +133,33 @@
                 android:gravity="end|center_vertical"
                 android:text="@string/gender" />
             <RadioGroup
+                android:id="@+id/genderSelection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal" >
                 <RadioButton
+                    android:id="@+id/male"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:layout_marginStart="20dp" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="end|center_vertical"
+                    android:text="@string/male" />
+
                 <RadioButton
+                    android:id="@+id/female"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:layout_marginStart="20dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="end|center_vertical"
+                    android:text="@string/female" />
 
             </RadioGroup>
 
