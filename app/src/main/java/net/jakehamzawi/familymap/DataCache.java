@@ -56,4 +56,13 @@ public class DataCache {
         this.persons = null;
         this.events = null;
     }
+
+    public Person getPersonByID(String id) {
+        for (Person person : this.persons) {
+            if (id.equals(person.getPersonID())) {
+                return person;
+            }
+        }
+        return null;
+    }
 }

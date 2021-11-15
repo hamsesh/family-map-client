@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import model.AuthToken;
+import model.Person;
 import model.User;
 import request.LoginRequest;
 import request.RegisterRequest;
@@ -131,7 +132,7 @@ public class LoginFragment extends Fragment {
         loginButton.setOnClickListener(v -> {
             Log.d("Login", "Register button pressed!");
             String host = Objects.requireNonNull(loginFields.get(Field.HOST)).getText().toString();
-            String port = Objects.requireNonNull(loginFields.get(Field.HOST)).getText().toString();
+            String port = Objects.requireNonNull(loginFields.get(Field.PORT)).getText().toString();
             String username = Objects.requireNonNull(loginFields.get(Field.USERNAME)).getText().toString();
             String password = Objects.requireNonNull(loginFields.get(Field.PASSWORD)).getText().toString();
 
@@ -161,9 +162,9 @@ public class LoginFragment extends Fragment {
 
         registerButton.setOnClickListener(v -> {
 
-            Log.d("Login", "Register button pressed!");
+            Log.d("Register", "Register button pressed!");
             String host = Objects.requireNonNull(loginFields.get(Field.HOST)).getText().toString();
-            String port = Objects.requireNonNull(loginFields.get(Field.HOST)).getText().toString();
+            String port = Objects.requireNonNull(loginFields.get(Field.PORT)).getText().toString();
             String username = Objects.requireNonNull(loginFields.get(Field.USERNAME)).getText().toString();
             String password = Objects.requireNonNull(loginFields.get(Field.PASSWORD)).getText().toString();
             String firstName = Objects.requireNonNull(registerFields.get(Field.FIRST_NAME)).getText().toString();
@@ -207,34 +208,6 @@ public class LoginFragment extends Fragment {
         return view;
     }
 
-    private boolean registerReady(Map<Field, Boolean> activeFields) {
-        boolean valid = true;
-        for (Boolean filled : activeFields.values()) {
-            if (!filled) {
-                valid = false;
-                break;
-            }
-        }
-        return valid;
-    }
-
-    private boolean loginReady(Map<Field, Boolean> activeFields, Map<Field, EditText> loginFields) {
-        boolean valid = true;
-        for (Field field : loginFields.keySet()) {
-            if (activeFields.get(field) == null || !activeFields.get(field)) {
-                valid = false;
-                break;
-            }
-        }
-        return valid;
-    }
-
-    private void updateButtons(Map<Field, Boolean> activeFields, Map<Field, EditText> loginFields,
-                               Button loginButton, Button registerButton) {
-        loginButton.setEnabled(loginReady(activeFields, loginFields));
-        registerButton.setEnabled(registerReady(activeFields));
-    }
-
     private static class LoginTask implements Runnable {
         private final Handler handler;
         private final LoginData loginData;
@@ -249,14 +222,17 @@ public class LoginFragment extends Fragment {
             LoginRequest request = new LoginRequest(loginData.username, loginData.password);
             ServerProxy proxy = new ServerProxy();
             LoginResult result = proxy.login(request, loginData.host, loginData.port);
-            if (result == null) {
-                sendMessage(new LoginResult(null, null, null,
-                        "Null result", false));
-                return;
-            }
             Log.d("Login", String.format("Login result: %s, %s",
                     result.isSuccess()?"success":"failure", result.getMessage()));
-            if (result.isSuccess()) {
+            if (!result.isSuccess()) {
+                Message message = handler.obtainMessage();
+                Bundle messageBundle = new Bundle();
+                messageBundle.putString(STATUS_KEY, "failure");
+                message.setData(messageBundle);
+                handler.sendMessage(message);
+                return;
+            }
+            else {
                 DataCache dataCache = DataCache.getInstance();
                 dataCache.setUser(new User(result.getUsername(), loginData.password, loginData.email,
                         loginData.firstName, loginData.lastName, loginData.gender,
@@ -264,27 +240,12 @@ public class LoginFragment extends Fragment {
                 dataCache.setAuthToken(new AuthToken(result.getAuthtoken(), result.getUsername()));
             }
             Log.d("Register", "About to send register message...");
-            sendMessage(result);
 
             // Get user data on new thread
-            DataTask dataTask = new DataTask(loginData.host, loginData.port);
+            DataTask dataTask = new DataTask(handler, loginData.host, loginData.port, result.getPersonID());
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(dataTask);
-        }
 
-        private void sendMessage(LoginResult result) {
-            Message message = Message.obtain();
-            Bundle messageBundle = new Bundle();
-            if (!result.isSuccess()) {
-                messageBundle.putString(STATUS_KEY, result.isSuccess() ? "success" : "failure");
-            }
-            else {
-                DataCache dataCache = DataCache.getInstance();
-                messageBundle.putString(FIRST_NAME_KEY, dataCache.getUser().getFirstName());
-                messageBundle.putString(LAST_NAME_KEY, dataCache.getUser().getLastName());
-            }
-            message.setData(messageBundle);
-            handler.sendMessage(message);
         }
     }
 
@@ -303,14 +264,17 @@ public class LoginFragment extends Fragment {
                     loginData.email, loginData.firstName, loginData.lastName, loginData.gender);
             ServerProxy proxy = new ServerProxy();
             RegisterResult result = proxy.register(request, loginData.host, loginData.port);
-            if (result == null) {
-                sendMessage(new RegisterResult(null, null, null,
-                        false, "Null result"));
-                return;
-            }
             Log.d("Register", String.format("Register result: %s, %s",
                     result.isSuccess()?"success":"failure", result.getMessage()));
-            if (result.isSuccess()) {
+            if (!result.isSuccess()) {
+                Message message = handler.obtainMessage();
+                Bundle messageBundle = new Bundle();
+                messageBundle.putString(STATUS_KEY, "failure");
+                message.setData(messageBundle);
+                handler.sendMessage(message);
+                return;
+            }
+            else {
                 DataCache dataCache = DataCache.getInstance();
                 dataCache.setUser(new User(result.getUsername(), loginData.password, loginData.email,
                         loginData.firstName, loginData.lastName, loginData.gender,
@@ -318,37 +282,26 @@ public class LoginFragment extends Fragment {
                 dataCache.setAuthToken(new AuthToken(result.getAuthtoken(), result.getUsername()));
             }
             Log.d("Register", "About to send register message...");
-            sendMessage(result);
+
 
             // Get user data on new thread
-            DataTask dataTask = new DataTask(loginData.host, loginData.port);
+            DataTask dataTask = new DataTask(handler, loginData.host, loginData.port, result.getPersonID());
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(dataTask);
-        }
-
-        private void sendMessage(RegisterResult result) {
-            Message message = Message.obtain();
-            Bundle messageBundle = new Bundle();
-            if (!result.isSuccess()) {
-                messageBundle.putString(STATUS_KEY, result.isSuccess() ? "success" : "failure");
-            }
-            else {
-                DataCache dataCache = DataCache.getInstance();
-                messageBundle.putString(FIRST_NAME_KEY, dataCache.getUser().getFirstName());
-                messageBundle.putString(LAST_NAME_KEY, dataCache.getUser().getLastName());
-            }
-            message.setData(messageBundle);
-            handler.sendMessage(message);
         }
     }
 
     private static class DataTask implements Runnable {
+        private final Handler handler;
         private final String host;
         private final String port;
+        private final String personID;
 
-        public DataTask(String host, String port) {
+        public DataTask(Handler handler, String host, String port, String personID) {
+            this.handler = handler;
             this.host = host;
             this.port = port;
+            this.personID = personID;
         }
 
         @Override
@@ -368,6 +321,23 @@ public class LoginFragment extends Fragment {
             else {
                 Log.e("Data", "Unable to download user data from server");
             }
+            sendMessage(personResult, eventResult);
+        }
+
+        private void sendMessage(PersonResult personResult, EventResult eventResult) {
+            Message message = Message.obtain();
+            Bundle messageBundle = new Bundle();
+            boolean success = personResult.isSuccess() && eventResult.isSuccess();
+            messageBundle.putString(STATUS_KEY, success ? "success" : "failure");
+
+            if (success) {
+                DataCache dataCache = DataCache.getInstance();
+                Person userPerson = dataCache.getPersonByID(personID);
+                messageBundle.putString(FIRST_NAME_KEY, userPerson.getFirstName());
+                messageBundle.putString(LAST_NAME_KEY, userPerson.getLastName());
+            }
+            message.setData(messageBundle);
+            handler.sendMessage(message);
         }
 
     }
@@ -404,5 +374,33 @@ public class LoginFragment extends Fragment {
             this.email = email;
             this.gender = gender;
         }
+    }
+
+    private boolean registerReady(Map<Field, Boolean> activeFields) {
+        boolean valid = true;
+        for (Boolean filled : activeFields.values()) {
+            if (!filled) {
+                valid = false;
+                break;
+            }
+        }
+        return valid;
+    }
+
+    private boolean loginReady(Map<Field, Boolean> activeFields, Map<Field, EditText> loginFields) {
+        boolean valid = true;
+        for (Field field : loginFields.keySet()) {
+            if (activeFields.get(field) == null || !activeFields.get(field)) {
+                valid = false;
+                break;
+            }
+        }
+        return valid;
+    }
+
+    private void updateButtons(Map<Field, Boolean> activeFields, Map<Field, EditText> loginFields,
+                               Button loginButton, Button registerButton) {
+        loginButton.setEnabled(loginReady(activeFields, loginFields));
+        registerButton.setEnabled(registerReady(activeFields));
     }
 }
