@@ -23,6 +23,12 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
                     .add(R.id.frameLayout, fragment)
                     .commit();
         }
+        else {
+            Fragment fragment = new MapsFragment();
+            fragmentManager.beginTransaction()
+                    .add(R.id.frameLayout, fragment)
+                    .commit();
+        }
     }
 
     private boolean loggedIn() {
@@ -39,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
     @Override
     public void notifyDone() {
         FragmentManager fragmentManager = this.getSupportFragmentManager();
-        Fragment fragment = new MapFragment();
+        Fragment fragment = new MapsFragment();
 
         fragmentManager.beginTransaction()
                 .replace(R.id.frameLayout, fragment)

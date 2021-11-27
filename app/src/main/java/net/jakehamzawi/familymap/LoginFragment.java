@@ -42,7 +42,7 @@ import result.RegisterResult;
  */
 public class LoginFragment extends Fragment {
     enum Field { HOST, PORT, USERNAME, PASSWORD, FIRST_NAME, LAST_NAME, EMAIL, GENDER }
-    private Listener listener;
+    protected Listener listener;
 
     public interface Listener {
         void notifyDone();
@@ -124,10 +124,7 @@ public class LoginFragment extends Fragment {
                 updateButtons(activeFields, loginFields, loginButton, registerButton);
             }
         });
-
-        //FIXME
         Context currentContext = getContext();
-        //
 
         loginButton.setOnClickListener(v -> {
             Log.d("Login", "Register button pressed!");
@@ -145,6 +142,7 @@ public class LoginFragment extends Fragment {
                     String status = bundle.getString(STATUS_KEY);
                     Log.d("Login", "Handling login message...");
                     if (status != null && status.equals("success")) {
+                        listener.notifyDone();
                         Toast.makeText(currentContext, bundle.getString(FIRST_NAME_KEY) + " " +
                                 bundle.getString(LAST_NAME_KEY), Toast.LENGTH_LONG).show();
                     }
@@ -189,6 +187,7 @@ public class LoginFragment extends Fragment {
                     String status = bundle.getString(STATUS_KEY);
                     Log.d("Register", "Handling register message...");
                     if (status != null && status.equals("success")) {
+                        listener.notifyDone();
                         Toast.makeText(currentContext, bundle.getString(FIRST_NAME_KEY) + " " +
                                 bundle.getString(LAST_NAME_KEY), Toast.LENGTH_LONG).show();
                     }
