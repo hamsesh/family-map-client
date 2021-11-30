@@ -1,6 +1,7 @@
 package net.jakehamzawi.familymap;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -16,6 +17,12 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
         setContentView(R.layout.activity_main);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
+
+        // assigning ID of the toolbar to a variable
+        Toolbar toolbar = findViewById(R.id.toolbar);
+
+        // using toolbar as ActionBar
+        setSupportActionBar(toolbar);
 
         if (!loggedIn()) {
             Fragment fragment = createLoginFragment();

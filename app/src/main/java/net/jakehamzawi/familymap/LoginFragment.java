@@ -11,6 +11,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -63,6 +65,7 @@ public class LoginFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
         Button loginButton = view.findViewById(R.id.loginButton);
         Button registerButton = view.findViewById(R.id.registerButton);
+
         RadioGroup rg = view.findViewById(R.id.genderSelection);
         loginButton.setEnabled(false);
         registerButton.setEnabled(false);
@@ -402,4 +405,5 @@ public class LoginFragment extends Fragment {
         loginButton.setEnabled(loginReady(activeFields, loginFields));
         registerButton.setEnabled(registerReady(activeFields));
     }
+
 }
