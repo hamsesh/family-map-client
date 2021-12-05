@@ -1,11 +1,13 @@
 package net.jakehamzawi.familymap;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import android.os.Bundle;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity implements LoginFragment.Listener {
 
@@ -23,20 +25,23 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
 
         // using toolbar as ActionBar
         setSupportActionBar(toolbar);
-
-        if (!loggedIn()) {
-            Fragment fragment = createLoginFragment();
-            fragmentManager.beginTransaction()
-                    .add(R.id.frameLayout, fragment)
-                    .commit();
-        }
-        else {
-            Fragment fragment = new MapsFragment();
-            fragmentManager.beginTransaction()
-                    .add(R.id.frameLayout, fragment)
-                    .commit();
+        if (savedInstanceState == null) {
+            Log.d("Main", "Saved instance state is null");
+            if (!loggedIn()) {
+                Fragment fragment = createLoginFragment();
+                fragmentManager.beginTransaction()
+                        .add(R.id.frameLayout, fragment, "mainFragment")
+                        .commit();
+            } else {
+                Fragment fragment = new MapsFragment();
+                fragmentManager.beginTransaction()
+                        .add(R.id.frameLayout, fragment, "mainFragment")
+                        .commit();
+            }
         }
     }
+
+
 
     private boolean loggedIn() {
         DataCache dataCache = DataCache.getInstance();

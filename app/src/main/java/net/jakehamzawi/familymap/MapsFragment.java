@@ -49,7 +49,7 @@ public class MapsFragment extends Fragment {
     private Event selectedEvent = null;
     private Person selectedPerson = null;
 
-    private OnMapReadyCallback callback = new OnMapReadyCallback() {
+    private final OnMapReadyCallback callback = new OnMapReadyCallback() {
 
         @Override
         public void onMapReady(GoogleMap googleMap) {
@@ -96,9 +96,9 @@ public class MapsFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         Log.d("Maps", "Saving instance state...");
+        outState.putString(EVENT_KEY, selectedEvent == null ? null : selectedEvent.getEventID());
+        outState.putString(PERSON_KEY, selectedPerson == null ? null : selectedPerson.getPersonID());
         super.onSaveInstanceState(outState);
-        outState.putString(EVENT_KEY, selectedEvent.getEventID());
-        outState.putString(PERSON_KEY, selectedPerson.getPersonID());
     }
 
     @Override
