@@ -11,9 +11,10 @@
         <entry key="app/src/main/res/drawable-anydpi/default_person.xml" value="0.22552083333333334" />
         <entry key="app/src/main/res/layout/activity_event.xml" value="0.18072916666666666" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.2015625" />
-        <entry key="app/src/main/res/layout/activity_person.xml" value="0.19479166666666667" />
+        <entry key="app/src/main/res/layout/activity_person.xml" value="0.335" />
         <entry key="app/src/main/res/layout/activity_search.xml" value="0.19479166666666667" />
         <entry key="app/src/main/res/layout/activity_settings.xml" value="0.19479166666666667" />
+        <entry key="app/src/main/res/layout/event_info_row.xml" value="0.35280797101449274" />
         <entry key="app/src/main/res/layout/fragment_login.xml" value="0.36041666666666666" />
         <entry key="app/src/main/res/layout/fragment_map.xml" value="0.1" />
         <entry key="app/src/main/res/layout/fragment_maps.xml" value="0.19479166666666667" />

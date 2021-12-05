@@ -227,14 +227,16 @@ public class MapsFragment extends Fragment {
 
         personImage.setImageResource(selectedPerson.getGender().equals("f") ? R.drawable.female :
                 R.drawable.male);
-        infoText.setText(getResources().getString(R.string.person_info, selectedPerson.getFirstName(),
-                selectedPerson.getLastName(), selectedEvent.getEventType().toUpperCase(Locale.ROOT),
-                selectedEvent.getCity(), selectedEvent.getCountry(), selectedEvent.getYear()));
+        infoText.setText(getResources().getString(R.string.info_bar_text,
+                getResources().getString(R.string.person_name, selectedPerson.getFirstName(),
+                        selectedPerson.getLastName()), getResources().getString(R.string.event_info,
+                        selectedEvent.getEventType().toUpperCase(Locale.ROOT), selectedEvent.getCity(),
+                        selectedEvent.getCountry(), selectedEvent.getYear())));
 
         LinearLayout infoBar = view.findViewById(R.id.infoBar);
         infoBar.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), PersonActivity.class);
-            intent.putExtra("personID", selectedPerson.getPersonID());
+            intent.putExtra(PERSON_KEY, selectedPerson.getPersonID());
             startActivity(intent);
         });
     }
