@@ -10,9 +10,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.ExpandableListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -27,7 +29,7 @@ import model.Person;
 public class PersonActivity extends AppCompatActivity {
 
     private static final String PERSON_KEY = "personID";
-    EventRecyclerAdapter adapter;
+    PersonExpandableListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,17 +56,22 @@ public class PersonActivity extends AppCompatActivity {
         genderText.setText(person.getGender().equals("f") ? R.string.female : R.string.male);
 
         // set up the RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.event_list);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        ExpandableListView listView = findViewById(R.id.exp_list);
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Callable<ArrayList<Event>> call = new EventTask(personID);
-        Future<ArrayList<Event>> future = executor.submit(call);
+
+        Callable<ArrayList<Event>> eventCall = new EventTask(personID);
+        Future<ArrayList<Event>> eventFuture = executor.submit(eventCall);
+        Callable<HashMap<String, ArrayList<Person>>> familyCall = new FamilyTask(personID);
+        Future<HashMap<String, ArrayList<Person>>> familyFuture = executor.submit(familyCall);
+        String[] titles = { "LIFE EVENTS", "FAMILY" };
         try {
-            adapter = new EventRecyclerAdapter(this, future.get(), person.getFirstName(), person.getLastName());
+            adapter = new PersonExpandableListAdapter(this, titles, eventFuture.get(),
+                    familyFuture.get(), person.getFirstName(), person.getLastName());
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
-        recyclerView.setAdapter(adapter);
+
+        listView.setAdapter(adapter);
     }
 
     private static class EventTask implements Callable<ArrayList<Event>> {
@@ -84,6 +91,70 @@ public class PersonActivity extends AppCompatActivity {
                 }
             }
             return new ArrayList<>(personEvents);
+        }
+    }
+
+    private static class FamilyTask implements Callable<HashMap<String, ArrayList<Person>>> {
+        private final String personID;
+
+        public FamilyTask(String personID) {
+            this.personID = personID;
+        }
+
+        @Override
+        public HashMap<String, ArrayList<Person>> call() {
+            DataCache dataCache = DataCache.getInstance();
+            HashMap<String, ArrayList<Person>> familyMembers = new HashMap<>();
+            Person rootPerson = dataCache.getPersonByID(personID);
+            for (Person person : dataCache.getPersons()) {
+                if (rootPerson.getMotherID() != null &&
+                        rootPerson.getFatherID().equals(person.getPersonID())) {
+                    if (!familyMembers.containsKey("Father")) {
+                        ArrayList<Person> newList = new ArrayList<>();
+                        newList.add(person);
+                        familyMembers.put("Father", newList);
+                    }
+                    else {
+                        familyMembers.get("Father").add(person);
+                    }
+                }
+                else if (rootPerson.getMotherID() != null &&
+                         rootPerson.getMotherID().equals(person.getPersonID())) {
+                    if (!familyMembers.containsKey("Mother")) {
+                        ArrayList<Person> newList = new ArrayList<>();
+                        newList.add(person);
+                        familyMembers.put("Mother", newList);
+                    }
+                    else {
+                        familyMembers.get("Mother").add(person);
+                    }
+                }
+                else if (rootPerson.getSpouseID() != null &&
+                         rootPerson.getSpouseID().equals(person.getPersonID())) {
+                    if (!familyMembers.containsKey("Spouse")) {
+                        ArrayList<Person> newList = new ArrayList<>();
+                        newList.add(person);
+                        familyMembers.put("Spouse", newList);
+                    }
+                    else {
+                        familyMembers.get("Spouse").add(person);
+                    }
+                }
+                else if (person.getFatherID() != null &&
+                         person.getFatherID().equals(personID) ||
+                         person.getMotherID() != null &&
+                         person.getMotherID().equals(personID)) {
+                    if (!familyMembers.containsKey("Child")) {
+                        ArrayList<Person> newList = new ArrayList<>();
+                        newList.add(person);
+                        familyMembers.put("Child", newList);
+                    }
+                    else {
+                        familyMembers.get("Child").add(person);
+                    }
+                }
+            }
+            return familyMembers;
         }
     }
 

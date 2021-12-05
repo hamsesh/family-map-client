@@ -34,7 +34,7 @@
     <string name="firstNamePerson">First Name</string>
     <string name="lastNamePerson">Last Name</string>
     <string name="genderPerson">Gender</string>
-    <string name="personEventsTitle">life events</string>
+    <string name="person_events_title">life events</string>
     <string name="personFamilyTitle">family</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
