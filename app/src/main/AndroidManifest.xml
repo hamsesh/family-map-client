@@ -43,10 +43,12 @@
 
         <activity
             android:name=".PersonActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName="net.jakehamzawi.familymap.MainActivity" />
         <activity
             android:name=".EventActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName="net.jakehamzawi.familymap.MainActivity" />
         <activity
             android:name=".SearchActivity"
             android:exported="false"

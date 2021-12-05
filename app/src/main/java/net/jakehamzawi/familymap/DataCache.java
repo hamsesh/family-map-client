@@ -65,4 +65,13 @@ public class DataCache {
         }
         return null;
     }
+
+    public Event getEventByID(String id) {
+        for (Event event : this.events) {
+            if (id.equals(event.getPersonID())) {
+                return event;
+            }
+        }
+        return null;
+    }
 }

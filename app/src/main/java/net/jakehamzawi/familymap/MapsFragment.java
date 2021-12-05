@@ -7,8 +7,6 @@ import androidx.fragment.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,8 +14,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.Toast;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -25,41 +24,53 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.HashMap;
+import java.util.Locale;
 
-import model.AuthToken;
 import model.Event;
-import model.User;
-import request.LoginRequest;
-import result.LoginResult;
+import model.Person;
 
 public class MapsFragment extends Fragment {
 
-    private static final String STATUS_KEY = "success";
+    private static final String EVENT_KEY = "eventID";
+    private static final String PERSON_KEY = "personID";
+    private final HashMap<Marker, Event> eventsOnMap = new HashMap<>();
+    private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_AZURE,
+                                                  BitmapDescriptorFactory.HUE_YELLOW,
+                                                  BitmapDescriptorFactory.HUE_GREEN,
+                                                  BitmapDescriptorFactory.HUE_RED,
+                                                  BitmapDescriptorFactory.HUE_ROSE,
+                                                  BitmapDescriptorFactory.HUE_ORANGE,
+                                                  BitmapDescriptorFactory.HUE_VIOLET,
+                                                  BitmapDescriptorFactory.HUE_MAGENTA };
+    private Event selectedEvent = null;
+    private Person selectedPerson = null;
 
     private OnMapReadyCallback callback = new OnMapReadyCallback() {
 
-        /**
-         * Manipulates the map once available.
-         * This callback is triggered when the map is ready to be used.
-         * This is where we can add markers or lines, add listeners or move the camera.
-         * In this case, we just add a marker near Sydney, Australia.
-         * If Google Play services is not installed on the device, the user will be prompted to
-         * install it inside the SupportMapFragment. This method will only be triggered once the
-         * user has installed Google Play services and returned to the app.
-         */
         @Override
         public void onMapReady(GoogleMap googleMap) {
-            LatLng sydney = new LatLng(-34, 151);
-            googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-            Context currentContext = getContext();
-
+            if (selectedEvent != null) {
+                LatLng location = new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude());
+                googleMap.addMarker(new MarkerOptions().position(location));
+                googleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+            }
             setMarkers(googleMap);
+
+            googleMap.setOnMarkerClickListener(marker -> {
+                selectedEvent = eventsOnMap.get(marker);
+                assert selectedEvent != null;
+
+                DataCache dataCache = DataCache.getInstance();
+                selectedPerson = dataCache.getPersonByID(selectedEvent.getPersonID());
+                assert selectedPerson != null;
+
+                setInfo();
+                return false;
+            });
 
             /*
             Handler uiThreadHandler = new Handler() {
@@ -81,12 +92,46 @@ public class MapsFragment extends Fragment {
         }
     };
 
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.d("Maps", "Saving instance state...");
+        super.onSaveInstanceState(outState);
+        outState.putString(EVENT_KEY, selectedEvent.getEventID());
+        outState.putString(PERSON_KEY, selectedPerson.getPersonID());
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null) {
+            Log.d("Maps", "Saved instance is not null");
+            String eventID = savedInstanceState.getString(EVENT_KEY);
+            String personID = savedInstanceState.getString(PERSON_KEY);
+            if (eventID != null && personID != null) {
+                Log.d("Maps", "EventID and personID are not null");
+                DataCache dataCache = DataCache.getInstance();
+                selectedEvent = dataCache.getEventByID(eventID);
+                selectedPerson = dataCache.getPersonByID(personID);
+                setInfo();
+            }
+        }
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_maps, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_maps, container, false);
+
+        ImageView personImage = view.findViewById(R.id.personImage);
+        personImage.setImageResource(R.drawable.default_person);
+
+        TextView infoText = view.findViewById(R.id.infoText);
+        infoText.setText(R.string.default_info);
+        return view;
     }
 
     @Override
@@ -158,30 +203,39 @@ public class MapsFragment extends Fragment {
     private void setMarkers(GoogleMap googleMap) {
         Log.d("Maps", "Placing event locations...");
         DataCache dataCache = DataCache.getInstance();
+        HashMap<String, Float> eventTypeColors = new HashMap<>();
+        int i = 0;
         for (Event event : dataCache.getEvents()) {
-            float color = 0f;
-            switch (event.getEventType()) {
-                case ("birth"):
-                    color = BitmapDescriptorFactory.HUE_AZURE;
-                    break;
-                case ("death"):
-                    color = BitmapDescriptorFactory.HUE_YELLOW;
-                    break;
-                case ("marriage"):
-                    color = BitmapDescriptorFactory.HUE_VIOLET;
-                    break;
-                case ("christening"):
-                    color = BitmapDescriptorFactory.HUE_GREEN;
-                    break;
-                case ("baptism"):
-                    color = BitmapDescriptorFactory.HUE_ROSE;
-                    break;
+            if (i == MARKER_COLORS.length) i = 0; // Reset colors if reached limit
+            if (!eventTypeColors.containsKey(event.getEventType())) {
+                eventTypeColors.put(event.getEventType(), MARKER_COLORS[i]);
             }
             Log.d("Maps", String.format("Adding %s event", event.getEventType()));
-            googleMap.addMarker(new MarkerOptions()
+            eventsOnMap.put(googleMap.addMarker(new MarkerOptions()
                     .position(new LatLng(event.getLatitude(), event.getLongitude()))
-                    .icon(BitmapDescriptorFactory.defaultMarker(color))
-                    .title(event.getEventType()));
+                    .icon(BitmapDescriptorFactory.defaultMarker(eventTypeColors.get(event.getEventType())))
+                    .title(event.getEventType())), event);
+            i++;
         }
+    }
+
+    private void setInfo() {
+        View view = getView();
+        assert view != null;
+        TextView infoText = view.findViewById(R.id.infoText);
+        ImageView personImage = view.findViewById(R.id.personImage);
+
+        personImage.setImageResource(selectedPerson.getGender().equals("f") ? R.drawable.female :
+                R.drawable.male);
+        infoText.setText(getResources().getString(R.string.person_info, selectedPerson.getFirstName(),
+                selectedPerson.getLastName(), selectedEvent.getEventType().toUpperCase(Locale.ROOT),
+                selectedEvent.getCity(), selectedEvent.getCountry(), selectedEvent.getYear()));
+
+        LinearLayout infoBar = view.findViewById(R.id.infoBar);
+        infoBar.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), PersonActivity.class);
+            intent.putExtra("personID", selectedPerson.getPersonID());
+            startActivity(intent);
+        });
     }
 }
