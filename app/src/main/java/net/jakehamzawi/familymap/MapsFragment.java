@@ -95,7 +95,6 @@ public class MapsFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        Log.d("Maps", "Saving instance state...");
         outState.putString(EVENT_KEY, selectedEvent == null ? null : selectedEvent.getEventID());
         outState.putString(PERSON_KEY, selectedPerson == null ? null : selectedPerson.getPersonID());
         super.onSaveInstanceState(outState);
@@ -105,11 +104,9 @@ public class MapsFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
-            Log.d("Maps", "Saved instance is not null");
             String eventID = savedInstanceState.getString(EVENT_KEY);
             String personID = savedInstanceState.getString(PERSON_KEY);
             if (eventID != null && personID != null) {
-                Log.d("Maps", "EventID and personID are not null");
                 DataCache dataCache = DataCache.getInstance();
                 selectedEvent = dataCache.getEventByID(eventID);
                 selectedPerson = dataCache.getPersonByID(personID);

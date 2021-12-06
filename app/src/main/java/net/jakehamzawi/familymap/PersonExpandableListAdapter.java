@@ -14,7 +14,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import net.jakehamzawi.familymap.model.FamilyMember;
 
 import model.Event;
 import model.Person;
@@ -29,21 +32,14 @@ public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
     private final String lastName;
 
     public PersonExpandableListAdapter(Context context, String[] expandableListTitle,
-                                       ArrayList<Event> events, HashMap<String, ArrayList<Person>> family,
+                                       ArrayList<Event> events, ArrayList<FamilyMember> family,
                                        String firstName, String lastName) {
         this.context = context;
         this.expandableListTitle = expandableListTitle;
         this.events = events;
         this.firstName = firstName;
         this.lastName = lastName;
-
-        this.familyMembers = new ArrayList<>();
-        for (Map.Entry<String, ArrayList<Person>> entry : family.entrySet()) {
-            for (Person person : entry.getValue()) {
-                this.familyMembers.add(new FamilyMember(entry.getKey(), person));
-            }
-        }
-        familyMembers.sort(new FamilyMemberComparator());
+        this.familyMembers = family;
     }
 
     @Override
@@ -115,7 +111,7 @@ public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
                     getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = layoutInflater.inflate(R.layout.event_group, null);
         }
-        TextView listTitleTextView = (TextView) convertView
+        TextView listTitleTextView = convertView
                 .findViewById(R.id.event_group_title);
         listTitleTextView.setTypeface(null, Typeface.BOLD);
         listTitleTextView.setText(listTitle);
@@ -133,61 +129,34 @@ public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
     }
 
     private void writeEvent(View view, Event event) {
+        ImageView personImage = view.findViewById(R.id.row_image);
+        personImage.setImageResource(R.drawable.location);
+
         Resources res = view.getResources();
 
-        TextView mainText = (TextView) view.findViewById(R.id.main_info);
+        TextView mainText = view.findViewById(R.id.main_info);
         String infoText = String.format(Locale.ROOT, "%s: %s, %s (%d)",
                 event.getEventType().toUpperCase(Locale.ROOT), event.getCity(),
                 event.getCountry(), event.getYear());
         mainText.setText(infoText);
 
-        TextView subText = (TextView) view.findViewById(R.id.sub_info);
+        TextView subText = view.findViewById(R.id.sub_info);
         subText.setText(res.getString(R.string.person_name, firstName, lastName));
     }
 
     private void writeFamilyMember(View view, FamilyMember familyMember) {
-        TextView mainText = (TextView) view.findViewById(R.id.main_info);
-        String infoText = String.format(Locale.ROOT, "%s %s", familyMember.person.getFirstName(),
-                familyMember.person.getLastName());
+        ImageView personImage = view.findViewById(R.id.row_image);
+        personImage.setImageResource(familyMember.getPerson().getGender().equals("f") ? R.drawable.female
+                : R.drawable.male);
+
+        TextView mainText = view.findViewById(R.id.main_info);
+        String infoText = String.format(Locale.ROOT, "%s %s", familyMember.getPerson().getFirstName(),
+                familyMember.getPerson().getLastName());
         mainText.setText(infoText);
 
-        TextView subText = (TextView) view.findViewById(R.id.sub_info);
-        subText.setText(familyMember.relation);
+        TextView subText = view.findViewById(R.id.sub_info);
+        subText.setText(familyMember.getRelation());
     }
 
-    private static class FamilyMember {
-        private final String relation;
-        private final Person person;
 
-        public FamilyMember(String relation, Person person) {
-            this.relation = relation;
-            this.person = person;
-        }
-
-        public String getRelation() {
-            return relation;
-        }
-
-        public Person getPerson() {
-            return person;
-        }
-    }
-
-    static class FamilyMemberComparator implements Comparator<FamilyMember> {
-        @Override
-        public int compare(FamilyMember o1, FamilyMember o2) {
-            if (o1 == o2) {
-                return 0;
-            }
-            if (o1.relation.equals("Father") ||
-                    o1.relation.equals("Mother") && !o2.relation.equals("Father") ||
-                    o1.relation.equals("Spouse") && (!o2.relation.equals("Father") &&
-                            !o2.relation.equals("Mother"))) {
-                return -1;
-            }
-            else {
-                return 1;
-            }
-        }
-    }
 }
