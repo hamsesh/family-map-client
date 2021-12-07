@@ -8,6 +8,7 @@ import androidx.preference.PreferenceManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -34,9 +35,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -54,6 +60,8 @@ public class MapsFragment extends Fragment {
     private Person[] filteredPersons = null;
     private Event[] filteredEvents = null;
     ArrayList<LatLng> spouseLine = null;
+    ArrayList<ArrayList<LatLng>> lifeLines = null;
+    ArrayList<FamilyLine> familyLines = null;
     ArrayList<Polyline> polylines = new ArrayList<>();
     protected HashMap<Marker, Event> eventsOnMap = new HashMap<>();
     private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_AZURE,
@@ -86,7 +94,7 @@ public class MapsFragment extends Fragment {
 
             LineHandler lineHandler = new LineHandler(this, googleMap);
 
-            LineTask lineTask = new LineTask(lineHandler);
+            LineTask lineTask = new LineTask(lineHandler, getContext());
             executor.submit(lineTask);
             return false;
         });
@@ -259,12 +267,7 @@ public class MapsFragment extends Fragment {
             Message message = Message.obtain();
             Bundle messageBundle = new Bundle();
             boolean success = filteredEvents != null;
-            if (success) {
-                messageBundle.putBoolean(SUCCESS_KEY, true);
-            }
-            else {
-                messageBundle.putBoolean(SUCCESS_KEY, false);
-            }
+            messageBundle.putBoolean(SUCCESS_KEY, success);
             message.setData(messageBundle);
             handler.sendMessage(message);
         }
@@ -284,12 +287,38 @@ public class MapsFragment extends Fragment {
             Log.d("Maps", "Placing marker lines...");
             clearPolylines();
             Bundle bundle = msg.getData();
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.fragment.requireContext());
+
+            float baseWeight = 7f;
+
             boolean spouseLineValid = bundle.getBoolean(SPOUSE_KEY);
-            if (spouseLineValid && prefs.getBoolean("spouse_lines", false)) {
+            boolean lifeLinesValid = bundle.getBoolean(LIFE_KEY);
+            boolean familyLinesValid = bundle.getBoolean(FAMILY_KEY);
+            if (spouseLineValid) {
                 this.fragment.polylines.add(
-                        googleMap.addPolyline(new PolylineOptions().addAll(fragment.spouseLine)));
+                        googleMap.addPolyline(new PolylineOptions()
+                                .color(Color.BLUE)
+                                .addAll(fragment.spouseLine)));
             }
+            if (lifeLinesValid) {
+                for (ArrayList<LatLng> points : fragment.lifeLines) {
+                    this.fragment.polylines.add(
+                            googleMap.addPolyline(new PolylineOptions()
+                                    .color(Color.GREEN)
+                                    .addAll(points)));
+                }
+            }
+            if (familyLinesValid) {
+                for (FamilyLine familyLine : fragment.familyLines) {
+                    float weight = baseWeight - familyLine.getGeneration();
+                    if (weight < 1f) weight = 1f;
+                    this.fragment.polylines.add(
+                            googleMap.addPolyline(new PolylineOptions()
+                                    .color(Color.RED)
+                                    .width(weight)
+                                    .addAll(familyLine.getPoints())));
+                }
+            }
+
         }
 
         private void clearPolylines() {
@@ -302,18 +331,30 @@ public class MapsFragment extends Fragment {
 
     private class LineTask implements Runnable {
         private final LineHandler handler;
+        private final Context context;
 
-        protected LineTask(LineHandler handler) {
+        protected LineTask(LineHandler handler, Context context) {
             this.handler = handler;
+            this.context = context;
         }
 
         @Override
         public void run() {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             DataCache dataCache = DataCache.getInstance();
-            HashMap<String, Person> personMap = dataCache.getPersonMap();
-            Person rootPerson = personMap.get(selectedEvent.getPersonID());
-            assert rootPerson != null;
-            spouseLine = findSpouseLine(rootPerson);
+
+            spouseLine = null;
+            lifeLines = null;
+            familyLines = null;
+            if (prefs.getBoolean("spouse_lines", false)) {
+                spouseLine = findSpouseLine();
+            }
+            if (prefs.getBoolean("life_lines", false)) {
+                lifeLines = findLifeLines();
+            }
+            if (prefs.getBoolean("family_lines", false)) {
+                familyLines = findFamilyLines();
+            }
             sendMessage();
         }
 
@@ -321,14 +362,16 @@ public class MapsFragment extends Fragment {
             Message message = Message.obtain();
             Bundle messageBundle = new Bundle();
             messageBundle.putBoolean(SPOUSE_KEY, spouseLine != null);
+            messageBundle.putBoolean(LIFE_KEY, lifeLines != null);
+            messageBundle.putBoolean(FAMILY_KEY, familyLines != null);
             message.setData(messageBundle);
             handler.sendMessage(message);
         }
 
-        private ArrayList<LatLng> findSpouseLine(Person rootPerson) {
+        private ArrayList<LatLng> findSpouseLine() {
             Event cachedEvent = null;
             for (Event event : filteredEvents) {
-                if (event.getPersonID().equals(rootPerson.getSpouseID())) {
+                if (event.getPersonID().equals(selectedPerson.getSpouseID())) {
                     if (event.getEventType().equalsIgnoreCase("birth")) {
                         ArrayList<LatLng> points = new ArrayList<>();
                         points.add(new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude()));
@@ -350,6 +393,122 @@ public class MapsFragment extends Fragment {
                 return points;
             }
         }
+
+        private ArrayList<ArrayList<LatLng>> findLifeLines() {
+            Set<Event> storyEvents = new TreeSet<>();
+            ArrayList<ArrayList<LatLng>> lifeLines = null;
+            for (Event event : filteredEvents) {
+                if (event.getPersonID().equals(selectedPerson.getPersonID())) {
+                    storyEvents.add(event);
+                }
+            }
+            Iterator<Event> iter = storyEvents.iterator();
+            Event nextEvent = iter.next();
+            for (Event event : storyEvents) {
+                if (!iter.hasNext()) break;
+                nextEvent = iter.next();
+                if (lifeLines == null) {
+                    lifeLines = new ArrayList<>();
+                }
+                ArrayList<LatLng> points = new ArrayList<>();
+                points.add(new LatLng(event.getLatitude(), event.getLongitude()));
+                points.add(new LatLng(nextEvent.getLatitude(), nextEvent.getLongitude()));
+                lifeLines.add(points);
+            }
+            return lifeLines;
+        }
+
+        private ArrayList<FamilyLine> findFamilyLines() {
+            HashMap<String, Person> personMap = generatePersonMap();
+            HashMap<String, TreeSet<Event>> eventsByPerson = generateEventMap(personMap);
+            ArrayList<FamilyLine> familyLines = new ArrayList<>();
+
+            addLineage(familyLines, personMap, eventsByPerson, selectedPerson, 0);
+            if (familyLines.isEmpty()) return null;
+            return familyLines;
+        }
+
+        private void addLineage(ArrayList<FamilyLine> familyLines,
+                                HashMap<String, Person> personMap,
+                                HashMap<String, TreeSet<Event>> eventsByPerson,
+                                Person person,
+                                int generation) {
+            if (person == null) return;
+            Person mother = personMap.get(person.getMotherID());
+            Person father = personMap.get(person.getFatherID());
+            addLineage(familyLines, personMap, eventsByPerson, mother, generation + 1);
+            addLineage(familyLines, personMap, eventsByPerson, father, generation + 1);
+            ArrayList<LatLng> points = new ArrayList<>();
+            Event personEvent;
+
+            // Get selected event, not first event of selectedPerson
+            if (person == selectedPerson) {
+                personEvent = selectedEvent;
+            }
+            else {
+                personEvent = getFirstEvent(person.getPersonID(), eventsByPerson);
+            }
+            if (mother != null) {
+                Event firstEventMother = getFirstEvent(mother.getPersonID(), eventsByPerson);
+                points.add(new LatLng(personEvent.getLatitude(), personEvent.getLongitude()));
+                points.add(new LatLng(firstEventMother.getLatitude(), firstEventMother.getLongitude()));
+                familyLines.add(new FamilyLine(generation, points));
+            }
+            if (father != null) {
+                Event firstEventFather = getFirstEvent(father.getPersonID(), eventsByPerson);
+                points.add(new LatLng(personEvent.getLatitude(), personEvent.getLongitude()));
+                points.add(new LatLng(firstEventFather.getLatitude(), firstEventFather.getLongitude()));
+                familyLines.add(new FamilyLine(generation, points));
+            }
+        }
+
+        private HashMap<String, Person> generatePersonMap() {
+            HashMap<String, Person> personMap = new HashMap<>();
+            for (Person person : filteredPersons) {
+                personMap.put(person.getPersonID(), person);
+            }
+            return personMap;
+        }
+
+        private HashMap<String, TreeSet<Event>> generateEventMap(HashMap<String, Person> personMap) {
+            HashMap<String, TreeSet<Event>> eventsByPerson = new HashMap<>();
+            for (Event event : filteredEvents) {
+                Person person = personMap.get(event.getPersonID());
+                assert person != null;
+                if (eventsByPerson.get(person.getPersonID()) == null) {
+                    TreeSet<Event> personEvents = new TreeSet<>();
+                    personEvents.add(event);
+                    eventsByPerson.put(person.getPersonID(), personEvents);
+                }
+                else {
+                    eventsByPerson.get(person.getPersonID()).add(event);
+                }
+            }
+            return eventsByPerson;
+        }
+
+        private Event getFirstEvent(String personID, HashMap<String, TreeSet<Event>> eventsByPerson) {
+            TreeSet<Event> orderedEvents = eventsByPerson.get(personID);
+            assert orderedEvents != null;
+            return orderedEvents.iterator().next();
+        }
     }
 
+    protected class FamilyLine {
+        private final int generation;
+        private final ArrayList<LatLng> points;
+
+        public FamilyLine(int generation, ArrayList<LatLng> points) {
+            this.generation = generation;
+            this.points = points;
+        }
+
+        public int getGeneration() {
+            return generation;
+        }
+
+        public ArrayList<LatLng> getPoints() {
+            return points;
+        }
+    }
 }
