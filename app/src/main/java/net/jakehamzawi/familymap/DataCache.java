@@ -71,6 +71,10 @@ public class DataCache {
         return this.filteredPersons.values().toArray(new Person[0]);
     }
 
+    public HashMap<String, Person> getPersonMap() {
+        return personMap;
+    }
+
     public Event[] getEvents() {
         return filteredEvents.toArray(new Event[0]);
     }

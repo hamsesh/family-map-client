@@ -31,7 +31,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -45,7 +48,13 @@ public class MapsFragment extends Fragment {
     private static final String EVENT_KEY = "eventID";
     private static final String PERSON_KEY = "personID";
     private static final String SUCCESS_KEY = "success";
+    private static final String SPOUSE_KEY = "spouse";
+    private static final String FAMILY_KEY = "family";
+    private static final String LIFE_KEY = "life";
+    private Person[] filteredPersons = null;
     private Event[] filteredEvents = null;
+    ArrayList<LatLng> spouseLine = null;
+    ArrayList<Polyline> polylines = new ArrayList<>();
     protected HashMap<Marker, Event> eventsOnMap = new HashMap<>();
     private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_AZURE,
                                                   BitmapDescriptorFactory.HUE_YELLOW,
@@ -74,6 +83,11 @@ public class MapsFragment extends Fragment {
             assert selectedPerson != null;
 
             setInfoBar();
+
+            LineHandler lineHandler = new LineHandler(this, googleMap);
+
+            LineTask lineTask = new LineTask(lineHandler);
+            executor.submit(lineTask);
             return false;
         });
 
@@ -166,6 +180,28 @@ public class MapsFragment extends Fragment {
         }
     }
 
+    private void setInfoBar() {
+        View view = getView();
+        assert view != null;
+        TextView infoText = view.findViewById(R.id.infoText);
+        ImageView personImage = view.findViewById(R.id.personImage);
+
+        personImage.setImageResource(selectedPerson.getGender().equals("f") ? R.drawable.female :
+                R.drawable.male);
+        infoText.setText(getResources().getString(R.string.info_bar_text,
+                getResources().getString(R.string.person_name, selectedPerson.getFirstName(),
+                        selectedPerson.getLastName()), getResources().getString(R.string.event_info,
+                        selectedEvent.getEventType().toUpperCase(Locale.ROOT), selectedEvent.getCity(),
+                        selectedEvent.getCountry(), selectedEvent.getYear())));
+
+        LinearLayout infoBar = view.findViewById(R.id.infoBar);
+        infoBar.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), PersonActivity.class);
+            intent.putExtra(PERSON_KEY, selectedPerson.getPersonID());
+            startActivity(intent);
+        });
+    }
+
     private static class FilterHandler extends Handler {
         private final MapsFragment fragment;
         private final GoogleMap googleMap;
@@ -215,6 +251,7 @@ public class MapsFragment extends Fragment {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             DataCache dataCache = DataCache.getFilteredInstance(prefs);
             filteredEvents = dataCache.getEvents();
+            filteredPersons = dataCache.getPersons();
             sendMessage();
         }
 
@@ -233,25 +270,86 @@ public class MapsFragment extends Fragment {
         }
     }
 
-    private void setInfoBar() {
-        View view = getView();
-        assert view != null;
-        TextView infoText = view.findViewById(R.id.infoText);
-        ImageView personImage = view.findViewById(R.id.personImage);
+    private static class LineHandler extends Handler {
+        private final MapsFragment fragment;
+        private final GoogleMap googleMap;
 
-        personImage.setImageResource(selectedPerson.getGender().equals("f") ? R.drawable.female :
-                R.drawable.male);
-        infoText.setText(getResources().getString(R.string.info_bar_text,
-                getResources().getString(R.string.person_name, selectedPerson.getFirstName(),
-                        selectedPerson.getLastName()), getResources().getString(R.string.event_info,
-                        selectedEvent.getEventType().toUpperCase(Locale.ROOT), selectedEvent.getCity(),
-                        selectedEvent.getCountry(), selectedEvent.getYear())));
+        private LineHandler(MapsFragment fragment, GoogleMap googleMap) {
+            this.fragment = fragment;
+            this.googleMap = googleMap;
+        }
 
-        LinearLayout infoBar = view.findViewById(R.id.infoBar);
-        infoBar.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), PersonActivity.class);
-            intent.putExtra(PERSON_KEY, selectedPerson.getPersonID());
-            startActivity(intent);
-        });
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            Log.d("Maps", "Placing marker lines...");
+            clearPolylines();
+            Bundle bundle = msg.getData();
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.fragment.requireContext());
+            boolean spouseLineValid = bundle.getBoolean(SPOUSE_KEY);
+            if (spouseLineValid && prefs.getBoolean("spouse_lines", false)) {
+                this.fragment.polylines.add(
+                        googleMap.addPolyline(new PolylineOptions().addAll(fragment.spouseLine)));
+            }
+        }
+
+        private void clearPolylines() {
+            for (Polyline polyline : this.fragment.polylines) {
+                polyline.remove();
+            }
+            this.fragment.polylines.clear();
+        }
     }
+
+    private class LineTask implements Runnable {
+        private final LineHandler handler;
+
+        protected LineTask(LineHandler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public void run() {
+            DataCache dataCache = DataCache.getInstance();
+            HashMap<String, Person> personMap = dataCache.getPersonMap();
+            Person rootPerson = personMap.get(selectedEvent.getPersonID());
+            assert rootPerson != null;
+            spouseLine = findSpouseLine(rootPerson);
+            sendMessage();
+        }
+
+        private void sendMessage() {
+            Message message = Message.obtain();
+            Bundle messageBundle = new Bundle();
+            messageBundle.putBoolean(SPOUSE_KEY, spouseLine != null);
+            message.setData(messageBundle);
+            handler.sendMessage(message);
+        }
+
+        private ArrayList<LatLng> findSpouseLine(Person rootPerson) {
+            Event cachedEvent = null;
+            for (Event event : filteredEvents) {
+                if (event.getPersonID().equals(rootPerson.getSpouseID())) {
+                    if (event.getEventType().equalsIgnoreCase("birth")) {
+                        ArrayList<LatLng> points = new ArrayList<>();
+                        points.add(new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude()));
+                        points.add(new LatLng(event.getLatitude(), event.getLongitude()));
+                        return points;
+                    }
+                    else {
+                        if (cachedEvent == null || event.compareTo(cachedEvent) < 0) {
+                            cachedEvent = event;
+                        }
+                    }
+                }
+            }
+            if (cachedEvent == null) return null;
+            else {
+                ArrayList<LatLng> points = new ArrayList<>();
+                points.add(new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude()));
+                points.add(new LatLng(cachedEvent.getLatitude(), cachedEvent.getLongitude()));
+                return points;
+            }
+        }
+    }
+
 }
