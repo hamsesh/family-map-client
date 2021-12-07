@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -58,37 +59,11 @@ public class MapsFragment extends Fragment {
     private Person selectedPerson = null;
 
     private final OnMapReadyCallback callback = googleMap -> {
-        Handler uiThreadHandler = new Handler() {
-            @Override
-            public void handleMessage(Message message) {
-                Log.d("Maps", "Placing event locations...");
-                eventsOnMap.clear();
-                Bundle bundle = message.getData();
-                Boolean success = bundle.getBoolean(SUCCESS_KEY);
-                HashMap<String, Float> eventTypeColors = new HashMap<>();
-                if (success != null && success) {
-                    int i = 0;
-                    for (Event event : filteredEvents) {
-                        if (i == MARKER_COLORS.length) i = 0; // Reset colors if reached limit
-                        if (!eventTypeColors.containsKey(event.getEventType())) {
-                            eventTypeColors.put(event.getEventType(), MARKER_COLORS[i]);
-                        }
-                        Log.d("Maps", String.format("Adding %s event", event.getEventType()));
-                        eventsOnMap.put(googleMap.addMarker(new MarkerOptions()
-                                .position(new LatLng(event.getLatitude(), event.getLongitude()))
-                                .icon(BitmapDescriptorFactory.defaultMarker(eventTypeColors.get(event.getEventType())))), event);
-                        i++;
-                    }
-                }
-                else {
-                    Toast.makeText(getContext(), "Failed to add markers to map", Toast.LENGTH_LONG).show();
-                }
-            }
-        };
+        FilterHandler uiThreadHandler = new FilterHandler(this, googleMap);
 
-        FilterTask markerTask = new FilterTask(uiThreadHandler, getContext());
+        FilterTask filterTask = new FilterTask(uiThreadHandler, getContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(markerTask);
+        executor.submit(filterTask);
 
         googleMap.setOnMarkerClickListener(marker -> {
             selectedEvent = eventsOnMap.get(marker);
@@ -191,11 +166,46 @@ public class MapsFragment extends Fragment {
         }
     }
 
+    private static class FilterHandler extends Handler {
+        private final MapsFragment fragment;
+        private final GoogleMap googleMap;
+
+        private FilterHandler(MapsFragment fragment, GoogleMap googleMap) {
+            this.fragment = fragment;
+            this.googleMap = googleMap;
+        }
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            Log.d("Maps", "Placing event locations...");
+            fragment.eventsOnMap.clear();
+            Bundle bundle = msg.getData();
+            boolean success = bundle.getBoolean(SUCCESS_KEY);
+            HashMap<String, Float> eventTypeColors = new HashMap<>();
+            if (success) {
+                int i = 0;
+                for (Event event : fragment.filteredEvents) {
+                    if (i == MARKER_COLORS.length) i = 0; // Reset colors if reached limit
+                    if (!eventTypeColors.containsKey(event.getEventType())) {
+                        eventTypeColors.put(event.getEventType(), MARKER_COLORS[i]);
+                    }
+                    Log.d("Maps", String.format("Adding %s event", event.getEventType()));
+                    fragment.eventsOnMap.put(googleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(event.getLatitude(), event.getLongitude()))
+                            .icon(BitmapDescriptorFactory.defaultMarker(eventTypeColors.get(event.getEventType())))), event);
+                    i++;
+                }
+            }
+            else {
+                Toast.makeText(fragment.getContext(), "Failed to add markers to map", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     private class FilterTask implements Runnable {
-        private final Handler handler;
+        private final FilterHandler handler;
         private final Context context;
 
-        protected FilterTask(Handler handler, Context context) {
+        protected FilterTask(FilterHandler handler, Context context) {
             this.handler = handler;
             this.context = context;
         }
