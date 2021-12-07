@@ -21,6 +21,11 @@ public class SettingsActivity extends AppCompatActivity {
         ActionBar ab = getSupportActionBar();
         assert ab != null;
         ab.setDisplayHomeAsUpEnabled(true);
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.settings_layout, new SettingsFragment())
+                .commit();
     }
 
     @Override

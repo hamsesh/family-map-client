@@ -4,10 +4,12 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NavUtils;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +34,7 @@ import model.Person;
 public class PersonActivity extends AppCompatActivity {
 
     private static final String PERSON_KEY = "personID";
+    private static final String EVENT_KEY = "eventID";
     PersonExpandableListAdapter adapter;
 
     @Override
@@ -158,8 +161,9 @@ public class PersonActivity extends AppCompatActivity {
         listView.expandGroup(1);
         listView.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
             if (titles[groupPosition].equals("LIFE EVENTS")) {
-                //
-                //eventFuture.get().get(childPosition);
+                Intent newEventIntent = new Intent(this, EventActivity.class);
+                newEventIntent.putExtra(EVENT_KEY, events.get(childPosition).getEventID());
+                startActivity(newEventIntent);
             }
             else {
                 Intent newPersonIntent = new Intent(this, PersonActivity.class);

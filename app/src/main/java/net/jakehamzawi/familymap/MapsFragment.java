@@ -3,10 +3,14 @@ package net.jakehamzawi.familymap;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,9 +21,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -29,6 +33,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import model.Event;
 import model.Person;
@@ -37,7 +43,9 @@ public class MapsFragment extends Fragment {
 
     private static final String EVENT_KEY = "eventID";
     private static final String PERSON_KEY = "personID";
-    private final HashMap<Marker, Event> eventsOnMap = new HashMap<>();
+    private static final String SUCCESS_KEY = "success";
+    private Event[] filteredEvents = null;
+    protected HashMap<Marker, Event> eventsOnMap = new HashMap<>();
     private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_AZURE,
                                                   BitmapDescriptorFactory.HUE_YELLOW,
                                                   BitmapDescriptorFactory.HUE_GREEN,
@@ -49,46 +57,62 @@ public class MapsFragment extends Fragment {
     private Event selectedEvent = null;
     private Person selectedPerson = null;
 
-    private final OnMapReadyCallback callback = new OnMapReadyCallback() {
-
-        @Override
-        public void onMapReady(GoogleMap googleMap) {
-            if (selectedEvent != null) {
-                LatLng location = new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude());
-                googleMap.addMarker(new MarkerOptions().position(location));
-                googleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
-            }
-            setMarkers(googleMap);
-
-            googleMap.setOnMarkerClickListener(marker -> {
-                selectedEvent = eventsOnMap.get(marker);
-                assert selectedEvent != null;
-
-                DataCache dataCache = DataCache.getInstance();
-                selectedPerson = dataCache.getPersonByID(selectedEvent.getPersonID());
-                assert selectedPerson != null;
-
-                setInfo();
-                return false;
-            });
-
-            /*
-            Handler uiThreadHandler = new Handler() {
-                @Override
-                public void handleMessage(Message message) {
-                    Bundle bundle = message.getData();
-                    String status = bundle.getString(STATUS_KEY);
-                    if (status == null || status.equals("failure")) {
-                        Toast.makeText(currentContext, "Failed to get ancestral events!", Toast.LENGTH_LONG).show();
-                        Log.d("Maps", "Failed to get ancestral events");
+    private final OnMapReadyCallback callback = googleMap -> {
+        Handler uiThreadHandler = new Handler() {
+            @Override
+            public void handleMessage(Message message) {
+                Log.d("Maps", "Placing event locations...");
+                eventsOnMap.clear();
+                Bundle bundle = message.getData();
+                Boolean success = bundle.getBoolean(SUCCESS_KEY);
+                HashMap<String, Float> eventTypeColors = new HashMap<>();
+                if (success != null && success) {
+                    int i = 0;
+                    for (Event event : filteredEvents) {
+                        if (i == MARKER_COLORS.length) i = 0; // Reset colors if reached limit
+                        if (!eventTypeColors.containsKey(event.getEventType())) {
+                            eventTypeColors.put(event.getEventType(), MARKER_COLORS[i]);
+                        }
+                        Log.d("Maps", String.format("Adding %s event", event.getEventType()));
+                        eventsOnMap.put(googleMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(event.getLatitude(), event.getLongitude()))
+                                .icon(BitmapDescriptorFactory.defaultMarker(eventTypeColors.get(event.getEventType())))), event);
+                        i++;
                     }
                 }
-            };
+                else {
+                    Toast.makeText(getContext(), "Failed to add markers to map", Toast.LENGTH_LONG).show();
+                }
+            }
+        };
 
-            LocationTask locationTask = new MapsFragment.LocationTask(uiThreadHandler, googleMap);
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(locationTask);
-             */
+        FilterTask markerTask = new FilterTask(uiThreadHandler, getContext());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(markerTask);
+
+        googleMap.setOnMarkerClickListener(marker -> {
+            selectedEvent = eventsOnMap.get(marker);
+            assert selectedEvent != null;
+
+            DataCache dataCache = DataCache.getInstance();
+            selectedPerson = dataCache.getPersonByID(selectedEvent.getPersonID());
+            assert selectedPerson != null;
+
+            setInfoBar();
+            return false;
+        });
+
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            DataCache dataCache = DataCache.getInstance();
+            selectedEvent = dataCache.getEventByID(bundle.getString(EVENT_KEY));
+            selectedPerson = dataCache.getPersonByID(selectedEvent.getPersonID());
+            setInfoBar();
+        }
+
+        if (selectedEvent != null) {
+            LatLng location = new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude());
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
         }
     };
 
@@ -110,7 +134,7 @@ public class MapsFragment extends Fragment {
                 DataCache dataCache = DataCache.getInstance();
                 selectedEvent = dataCache.getEventByID(eventID);
                 selectedPerson = dataCache.getPersonByID(personID);
-                setInfo();
+                setInfoBar();
             }
         }
     }
@@ -143,8 +167,10 @@ public class MapsFragment extends Fragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_map, menu);
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        if (requireActivity().getClass() == MainActivity.class) {
+            inflater.inflate(R.menu.menu_main_map, menu);
+        }
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -165,58 +191,39 @@ public class MapsFragment extends Fragment {
         }
     }
 
-    /*
-    private static class LocationTask implements Runnable {
+    private class FilterTask implements Runnable {
         private final Handler handler;
-        private final GoogleMap googleMap;
+        private final Context context;
 
-        public LocationTask(Handler handler, GoogleMap googleMap) {
+        protected FilterTask(Handler handler, Context context) {
             this.handler = handler;
-            this.googleMap = googleMap;
+            this.context = context;
         }
 
         @Override
         public void run() {
-            Log.d("Maps", "Placing event locations...");
-            DataCache dataCache = DataCache.getInstance();
-            if (dataCache == null || dataCache.getEvents() == null) {
-                Message message = handler.obtainMessage();
-                Bundle messageBundle = new Bundle();
-                messageBundle.putString(STATUS_KEY, "failure");
-                message.setData(messageBundle);
-                handler.sendMessage(message);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            DataCache dataCache = DataCache.getFilteredInstance(prefs);
+            filteredEvents = dataCache.getEvents();
+            sendMessage();
+        }
+
+        private void sendMessage() {
+            Message message = Message.obtain();
+            Bundle messageBundle = new Bundle();
+            boolean success = filteredEvents != null;
+            if (success) {
+                messageBundle.putBoolean(SUCCESS_KEY, true);
             }
             else {
-
-                for (Event event : dataCache.getEvents()) {
-                    Log.d("Maps", String.format("Adding %s event", event.getEventType()));
-                    googleMap.addMarker(new MarkerOptions().position(new LatLng(event.getLatitude(), event.getLongitude())));
-                }
+                messageBundle.putBoolean(SUCCESS_KEY, false);
             }
-        }
-    }
-     */
-
-    private void setMarkers(GoogleMap googleMap) {
-        Log.d("Maps", "Placing event locations...");
-        DataCache dataCache = DataCache.getInstance();
-        HashMap<String, Float> eventTypeColors = new HashMap<>();
-        int i = 0;
-        for (Event event : dataCache.getEvents()) {
-            if (i == MARKER_COLORS.length) i = 0; // Reset colors if reached limit
-            if (!eventTypeColors.containsKey(event.getEventType())) {
-                eventTypeColors.put(event.getEventType(), MARKER_COLORS[i]);
-            }
-            Log.d("Maps", String.format("Adding %s event", event.getEventType()));
-            eventsOnMap.put(googleMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(event.getLatitude(), event.getLongitude()))
-                    .icon(BitmapDescriptorFactory.defaultMarker(eventTypeColors.get(event.getEventType())))
-                    .title(event.getEventType())), event);
-            i++;
+            message.setData(messageBundle);
+            handler.sendMessage(message);
         }
     }
 
-    private void setInfo() {
+    private void setInfoBar() {
         View view = getView();
         assert view != null;
         TextView infoText = view.findViewById(R.id.infoText);
