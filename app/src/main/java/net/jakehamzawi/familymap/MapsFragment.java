@@ -64,10 +64,10 @@ public class MapsFragment extends Fragment {
     ArrayList<FamilyLine> familyLines = null;
     ArrayList<Polyline> polylines = new ArrayList<>();
     protected HashMap<Marker, Event> eventsOnMap = new HashMap<>();
-    private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_AZURE,
+    private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_RED,
                                                   BitmapDescriptorFactory.HUE_YELLOW,
                                                   BitmapDescriptorFactory.HUE_GREEN,
-                                                  BitmapDescriptorFactory.HUE_RED,
+                                                  BitmapDescriptorFactory.HUE_AZURE,
                                                   BitmapDescriptorFactory.HUE_ROSE,
                                                   BitmapDescriptorFactory.HUE_ORANGE,
                                                   BitmapDescriptorFactory.HUE_VIOLET,
@@ -110,9 +110,13 @@ public class MapsFragment extends Fragment {
         if (selectedEvent != null) {
             LatLng location = new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude());
             googleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+
+            LineHandler lineHandler = new LineHandler(this, googleMap);
+
+            LineTask lineTask = new LineTask(lineHandler, getContext());
+            executor.submit(lineTask);
         }
     };
-
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -124,16 +128,7 @@ public class MapsFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (savedInstanceState != null) {
-            String eventID = savedInstanceState.getString(EVENT_KEY);
-            String personID = savedInstanceState.getString(PERSON_KEY);
-            if (eventID != null && personID != null) {
-                DataCache dataCache = DataCache.getInstance();
-                selectedEvent = dataCache.getEventByID(eventID);
-                selectedPerson = dataCache.getPersonByID(personID);
-                setInfoBar();
-            }
-        }
+
     }
 
     @Nullable

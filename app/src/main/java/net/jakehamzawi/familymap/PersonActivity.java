@@ -56,10 +56,9 @@ public class PersonActivity extends AppCompatActivity {
 
         setPersonInfo(person);
 
-        // set up the RecyclerView
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
+        //FIXME: Doesn't actually take advantage of async behavior of Future
         Callable<ArrayList<Event>> eventCall = new EventTask(personID);
         Future<ArrayList<Event>> eventFuture = executor.submit(eventCall);
         Callable<ArrayList<FamilyMember>> familyCall = new FamilyTask(personID);
@@ -157,8 +156,6 @@ public class PersonActivity extends AppCompatActivity {
                 family, rootPerson.getFirstName(), rootPerson.getLastName());
 
         listView.setAdapter(adapter);
-        listView.expandGroup(0);
-        listView.expandGroup(1);
         listView.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
             if (titles[groupPosition].equals("LIFE EVENTS")) {
                 Intent newEventIntent = new Intent(this, EventActivity.class);

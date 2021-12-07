@@ -36,7 +36,7 @@ public class EventActivity extends AppCompatActivity {
             fragment.setArguments(bundle);
 
             fragmentManager.beginTransaction()
-                    .add(R.id.root_layout, fragment, "map_fragment")
+                    .replace(R.id.root_layout, fragment, "map_fragment")
                     .commit();
         }
     }
