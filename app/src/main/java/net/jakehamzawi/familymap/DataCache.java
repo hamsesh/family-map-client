@@ -3,9 +3,12 @@ package net.jakehamzawi.familymap;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import model.*;
@@ -20,6 +23,15 @@ public class DataCache {
     private HashMap<String, Person> personMap;
     private HashMap<String, Person> filteredPersons;
     private ArrayList<Event> filteredEvents;
+    private final HashMap<String, Float> colorMap = new HashMap<>();
+    private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_RED,
+                                                    BitmapDescriptorFactory.HUE_YELLOW,
+                                                    BitmapDescriptorFactory.HUE_AZURE,
+                                                    BitmapDescriptorFactory.HUE_GREEN,
+                                                    BitmapDescriptorFactory.HUE_ROSE,
+                                                    BitmapDescriptorFactory.HUE_ORANGE,
+                                                    BitmapDescriptorFactory.HUE_VIOLET,
+                                                    BitmapDescriptorFactory.HUE_MAGENTA };
 
     public static DataCache getInstance() {
         if (instance == null) {
@@ -77,6 +89,13 @@ public class DataCache {
 
     public Event[] getEvents() {
         return filteredEvents.toArray(new Event[0]);
+    }
+
+    public float getColor(String eventType) {
+        if (!colorMap.containsKey(eventType.toLowerCase(Locale.ROOT))) {
+            colorMap.put(eventType.toLowerCase(Locale.ROOT), MARKER_COLORS[colorMap.size() % MARKER_COLORS.length]);
+        }
+        return colorMap.get(eventType.toLowerCase(Locale.ROOT));
     }
 
     public void invalidate() {

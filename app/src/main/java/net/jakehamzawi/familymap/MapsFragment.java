@@ -64,14 +64,7 @@ public class MapsFragment extends Fragment {
     ArrayList<FamilyLine> familyLines = null;
     ArrayList<Polyline> polylines = new ArrayList<>();
     protected HashMap<Marker, Event> eventsOnMap = new HashMap<>();
-    private static final float[] MARKER_COLORS = { BitmapDescriptorFactory.HUE_RED,
-                                                  BitmapDescriptorFactory.HUE_YELLOW,
-                                                  BitmapDescriptorFactory.HUE_GREEN,
-                                                  BitmapDescriptorFactory.HUE_AZURE,
-                                                  BitmapDescriptorFactory.HUE_ROSE,
-                                                  BitmapDescriptorFactory.HUE_ORANGE,
-                                                  BitmapDescriptorFactory.HUE_VIOLET,
-                                                  BitmapDescriptorFactory.HUE_MAGENTA };
+
     private Event selectedEvent = null;
     private Person selectedPerson = null;
 
@@ -216,22 +209,16 @@ public class MapsFragment extends Fragment {
         @Override
         public void handleMessage(@NonNull Message msg) {
             Log.d("Maps", "Placing event locations...");
+            DataCache dataCache = DataCache.getInstance();
             fragment.eventsOnMap.clear();
             Bundle bundle = msg.getData();
             boolean success = bundle.getBoolean(SUCCESS_KEY);
-            HashMap<String, Float> eventTypeColors = new HashMap<>();
             if (success) {
-                int i = 0;
                 for (Event event : fragment.filteredEvents) {
-                    if (i == MARKER_COLORS.length) i = 0; // Reset colors if reached limit
-                    if (!eventTypeColors.containsKey(event.getEventType())) {
-                        eventTypeColors.put(event.getEventType(), MARKER_COLORS[i]);
-                    }
                     Log.d("Maps", String.format("Adding %s event", event.getEventType()));
                     fragment.eventsOnMap.put(googleMap.addMarker(new MarkerOptions()
                             .position(new LatLng(event.getLatitude(), event.getLongitude()))
-                            .icon(BitmapDescriptorFactory.defaultMarker(eventTypeColors.get(event.getEventType())))), event);
-                    i++;
+                            .icon(BitmapDescriptorFactory.defaultMarker(dataCache.getColor(event.getEventType())))), event);
                 }
             }
             else {
