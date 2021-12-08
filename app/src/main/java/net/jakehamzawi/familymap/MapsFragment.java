@@ -102,7 +102,7 @@ public class MapsFragment extends Fragment {
 
         if (selectedEvent != null) {
             LatLng location = new LatLng(selectedEvent.getLatitude(), selectedEvent.getLongitude());
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 5f));
 
             LineHandler lineHandler = new LineHandler(this, googleMap);
 
@@ -271,7 +271,7 @@ public class MapsFragment extends Fragment {
             clearPolylines();
             Bundle bundle = msg.getData();
 
-            float baseWeight = 7f;
+            float baseWeight = 10f;
 
             boolean spouseLineValid = bundle.getBoolean(SPOUSE_KEY);
             boolean lifeLinesValid = bundle.getBoolean(LIFE_KEY);
@@ -292,7 +292,7 @@ public class MapsFragment extends Fragment {
             }
             if (familyLinesValid) {
                 for (FamilyLine familyLine : fragment.familyLines) {
-                    float weight = baseWeight - familyLine.getGeneration();
+                    float weight = baseWeight - familyLine.getGeneration() * 1.5f;
                     if (weight < 1f) weight = 1f;
                     this.fragment.polylines.add(
                             googleMap.addPolyline(new PolylineOptions()
@@ -324,7 +324,6 @@ public class MapsFragment extends Fragment {
         @Override
         public void run() {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            DataCache dataCache = DataCache.getInstance();
 
             spouseLine = null;
             lifeLines = null;

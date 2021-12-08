@@ -225,7 +225,7 @@ public class LoginFragment extends Fragment {
             ServerProxy proxy = new ServerProxy();
             LoginResult result = proxy.login(request, loginData.host, loginData.port);
             Log.d("Login", String.format("Login result: %s, %s",
-                    result.isSuccess()?"success":"failure", result.getMessage()));
+                    result.isSuccess() ? "success" : "failure", result.getMessage()));
             if (!result.isSuccess()) {
                 Message message = handler.obtainMessage();
                 Bundle messageBundle = new Bundle();

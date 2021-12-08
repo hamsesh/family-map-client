@@ -75,13 +75,13 @@ public class PersonActivity extends AppCompatActivity {
         @Override
         public ArrayList<Event> call() {
             DataCache dataCache = DataCache.getInstance();
-            Set<Event> personEvents = new TreeSet<>();
+            ArrayList<Event> personEvents = new ArrayList<>();
             for (Event event : dataCache.getEvents()) {
                 if (event.getPersonID().equals(personID)) {
                     personEvents.add(event);
                 }
             }
-            return new ArrayList<>(personEvents);
+            return DataProcessor.sortEvents(personEvents);
         }
     }
 
@@ -95,30 +95,8 @@ public class PersonActivity extends AppCompatActivity {
         @Override
         public ArrayList<FamilyMember> call() {
             DataCache dataCache = DataCache.getInstance();
-            ArrayList<FamilyMember> familyMembers = new ArrayList<>();
             Person rootPerson = dataCache.getPersonByID(personID);
-            for (Person person : dataCache.getPersons()) {
-                if (rootPerson.getMotherID() != null &&
-                        rootPerson.getFatherID().equals(person.getPersonID())) {
-                    familyMembers.add(new FamilyMember("Father", person));
-                }
-                else if (rootPerson.getMotherID() != null &&
-                         rootPerson.getMotherID().equals(person.getPersonID())) {
-                    familyMembers.add(new FamilyMember("Mother", person));
-                }
-                else if (rootPerson.getSpouseID() != null &&
-                         rootPerson.getSpouseID().equals(person.getPersonID())) {
-                    familyMembers.add(new FamilyMember("Spouse", person));
-                }
-                else if (person.getFatherID() != null &&
-                         person.getFatherID().equals(personID) ||
-                         person.getMotherID() != null &&
-                         person.getMotherID().equals(personID)) {
-                    familyMembers.add(new FamilyMember("Child", person));
-                }
-            }
-            familyMembers.sort(new FamilyMember.FamilyMemberComparator());
-            return familyMembers;
+            return DataProcessor.findFamily(rootPerson);
         }
     }
 
