@@ -42,12 +42,13 @@
                 android:layout_weight="80"
                 tools:ignore="Autofill,LabelFor" />
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/clearText"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="10"
                 android:src="@drawable/close"
+                android:background="?android:selectableItemBackground"
                 android:contentDescription="@string/clear_text" />
 
         </LinearLayout>

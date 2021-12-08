@@ -77,12 +77,20 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
             this.tempPrefs = getSharedPreferences("tempPrefs", MODE_PRIVATE);
             return;
         }
+        if (!loggedIn()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frameLayout, createLoginFragment())
+                    .commit();
+            return;
+        }
         if (!preferencesEqual(tempPrefs, PreferenceManager.getDefaultSharedPreferences(this))) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.frameLayout, new MapsFragment())
                     .commit();
         }
+
     }
 
     private void copyPreferences() {

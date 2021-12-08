@@ -16,6 +16,7 @@ import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
@@ -80,7 +81,7 @@ public class SearchActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
 
-        ImageView clearButton = findViewById(R.id.clearText);
+        ImageButton clearButton = findViewById(R.id.clearText);
         clearButton.setOnClickListener(v -> {
             searchText.setText("");
         });

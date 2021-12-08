@@ -8,12 +8,13 @@
         <entry key="..\:/Users/mutte/AndroidStudioProjects/FamilyMap/app/src/main/res/layout/fragment_login.xml" value="0.3140625" />
         <entry key="..\:/Users/mutte/AndroidStudioProjects/FamilyMap/app/src/main/res/layout/fragment_map.xml" value="0.32864583333333336" />
         <entry key="app/src/main/res/drawable-anydpi/list_open.xml" value="0.26666666666666666" />
+        <entry key="app/src/main/res/drawable/roundcorner.xml" value="0.4546875" />
         <entry key="app/src/main/res/drawable/selector.xml" value="0.26666666666666666" />
         <entry key="app/src/main/res/layout/activity_event.xml" value="0.25364583333333335" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.2015625" />
         <entry key="app/src/main/res/layout/activity_person.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_search.xml" value="0.1" />
-        <entry key="app/src/main/res/layout/activity_settings.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_settings.xml" value="0.33" />
         <entry key="app/src/main/res/layout/event_group.xml" value="0.125" />
         <entry key="app/src/main/res/layout/event_info_row.xml" value="0.25052083333333336" />
         <entry key="app/src/main/res/layout/fragment_login.xml" value="0.36041666666666666" />
