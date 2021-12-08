@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import net.jakehamzawi.familymap.data.DataCache;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

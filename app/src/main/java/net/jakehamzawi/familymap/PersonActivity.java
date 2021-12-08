@@ -11,11 +11,12 @@ import android.view.MenuItem;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 
+import net.jakehamzawi.familymap.adapter.PersonExpandableListAdapter;
+import net.jakehamzawi.familymap.data.DataCache;
+import net.jakehamzawi.familymap.data.DataProcessor;
 import net.jakehamzawi.familymap.model.FamilyMember;
 
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;

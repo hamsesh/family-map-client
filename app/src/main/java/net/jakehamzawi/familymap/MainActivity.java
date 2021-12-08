@@ -9,6 +9,8 @@ import androidx.preference.PreferenceManager;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import net.jakehamzawi.familymap.data.DataCache;
+
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements LoginFragment.Listener {

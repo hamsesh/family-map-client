@@ -35,12 +35,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import java.util.AbstractMap;
+import net.jakehamzawi.familymap.data.DataCache;
+import net.jakehamzawi.familymap.data.DataProcessor;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
@@ -401,8 +402,8 @@ public class MapsFragment extends Fragment {
         }
 
         private ArrayList<FamilyLine> findFamilyLines() {
-            HashMap<String, Person> personMap = generatePersonMap();
-            HashMap<String, TreeSet<Event>> eventsByPerson = generateEventMap(personMap);
+            HashMap<String, Person> personMap = DataProcessor.generatePersonMap(filteredPersons);
+            HashMap<String, TreeSet<Event>> eventsByPerson = DataProcessor.generateSortedEventMap(filteredEvents, personMap);
             ArrayList<FamilyLine> familyLines = new ArrayList<>();
 
             addLineage(familyLines, personMap, eventsByPerson, selectedPerson, 0);
@@ -444,31 +445,6 @@ public class MapsFragment extends Fragment {
             }
         }
 
-        private HashMap<String, Person> generatePersonMap() {
-            HashMap<String, Person> personMap = new HashMap<>();
-            for (Person person : filteredPersons) {
-                personMap.put(person.getPersonID(), person);
-            }
-            return personMap;
-        }
-
-        private HashMap<String, TreeSet<Event>> generateEventMap(HashMap<String, Person> personMap) {
-            HashMap<String, TreeSet<Event>> eventsByPerson = new HashMap<>();
-            for (Event event : filteredEvents) {
-                Person person = personMap.get(event.getPersonID());
-                assert person != null;
-                if (eventsByPerson.get(person.getPersonID()) == null) {
-                    TreeSet<Event> personEvents = new TreeSet<>();
-                    personEvents.add(event);
-                    eventsByPerson.put(person.getPersonID(), personEvents);
-                }
-                else {
-                    eventsByPerson.get(person.getPersonID()).add(event);
-                }
-            }
-            return eventsByPerson;
-        }
-
         private Event getFirstEvent(String personID, HashMap<String, TreeSet<Event>> eventsByPerson) {
             TreeSet<Event> orderedEvents = eventsByPerson.get(personID);
             assert orderedEvents != null;
@@ -476,7 +452,7 @@ public class MapsFragment extends Fragment {
         }
     }
 
-    protected class FamilyLine {
+    protected static class FamilyLine {
         private final int generation;
         private final ArrayList<LatLng> points;
 

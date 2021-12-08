@@ -1,22 +1,19 @@
 package com.example.familymap;
 
-import net.jakehamzawi.familymap.DataCache;
-import net.jakehamzawi.familymap.DataProcessor;
+import net.jakehamzawi.familymap.data.DataCache;
+import net.jakehamzawi.familymap.data.DataProcessor;
 import net.jakehamzawi.familymap.ServerProxy;
 
+import static org.junit.Assert.*;
+
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -74,7 +71,7 @@ public class EventSortTest {
         for (Map.Entry<Person, List<Event>> entry : dataMap.entrySet()) {
             int min = -1;
             for (Event event : entry.getValue()) {
-                Assert.assertTrue(event.getYear() > min);
+                assertTrue(event.getYear() > min);
                 min = event.getYear();
             }
         }
@@ -92,9 +89,9 @@ public class EventSortTest {
         List<Event> events = Stream.of(event1, event3, event2).collect(Collectors.toList());
         ArrayList<Event> sortedEvents = DataProcessor.sortEvents(events);
 
-        Assert.assertEquals("Birth", sortedEvents.get(0).getEventType());
-        Assert.assertEquals("Test", sortedEvents.get(1).getEventType());
-        Assert.assertEquals("Death", sortedEvents.get(2).getEventType());
+        assertEquals("Birth", sortedEvents.get(0).getEventType());
+        assertEquals("Test", sortedEvents.get(1).getEventType());
+        assertEquals("Death", sortedEvents.get(2).getEventType());
     }
 
     @Test
@@ -107,8 +104,8 @@ public class EventSortTest {
         List<Event> events = Stream.of(event2, event1).collect(Collectors.toList());
         ArrayList<Event> sortedEvents = DataProcessor.sortEvents(events);
 
-        Assert.assertEquals("Birth", sortedEvents.get(0).getEventType());
-        Assert.assertEquals("Death", sortedEvents.get(1).getEventType());
+        assertEquals("Birth", sortedEvents.get(0).getEventType());
+        assertEquals("Death", sortedEvents.get(1).getEventType());
     }
 
     @AfterClass

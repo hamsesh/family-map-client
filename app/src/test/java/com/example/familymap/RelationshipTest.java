@@ -1,12 +1,13 @@
 package com.example.familymap;
 
-import net.jakehamzawi.familymap.DataCache;
-import net.jakehamzawi.familymap.DataProcessor;
+import net.jakehamzawi.familymap.data.DataCache;
+import net.jakehamzawi.familymap.data.DataProcessor;
 import net.jakehamzawi.familymap.ServerProxy;
 import net.jakehamzawi.familymap.model.FamilyMember;
 
+import static org.junit.Assert.*;
+
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -57,17 +58,17 @@ public class RelationshipTest {
         int totalFamilyMembers = 0;
         assert rootPerson != null;
         if (rootPerson.getMotherID() != null) {
-            Assert.assertEquals(rootPerson.getMotherID(),
+            assertEquals(rootPerson.getMotherID(),
                     getMember(familyMembers, "mother").getPerson().getPersonID());
             totalFamilyMembers++;
         }
         if (rootPerson.getFatherID() != null) {
-            Assert.assertEquals(rootPerson.getFatherID(),
+            assertEquals(rootPerson.getFatherID(),
                     getMember(familyMembers, "father").getPerson().getPersonID());
             totalFamilyMembers++;
         }
         if (rootPerson.getSpouseID() != null) {
-            Assert.assertEquals(rootPerson.getSpouseID(),
+            assertEquals(rootPerson.getSpouseID(),
                     getMember(familyMembers, "spouse").getPerson().getPersonID());
             totalFamilyMembers++;
         }
@@ -75,7 +76,7 @@ public class RelationshipTest {
         List<FamilyMember> children = getChildren(familyMembers);
         for (FamilyMember familyMember : children) {
             Person childOnMap = personMap.get(familyMember.getPerson().getPersonID());
-            Assert.assertTrue(childOnMap.getFatherID().equals(rootPerson.getPersonID()) ||
+            assertTrue(childOnMap.getFatherID().equals(rootPerson.getPersonID()) ||
                     childOnMap.getMotherID().equals(rootPerson.getPersonID()));
         }
 
@@ -87,7 +88,7 @@ public class RelationshipTest {
             }
         }
 
-        Assert.assertEquals(totalFamilyMembers, familyMembers.size());
+        assertEquals(totalFamilyMembers, familyMembers.size());
     }
 
     private FamilyMember getMember(List<FamilyMember> familyMembers, String relation) {

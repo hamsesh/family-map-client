@@ -17,18 +17,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import net.jakehamzawi.familymap.adapter.SearchRecyclerAdapter;
+import net.jakehamzawi.familymap.data.DataProcessor;
 import net.jakehamzawi.familymap.model.SearchResult;
 
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import model.Event;
-import model.Person;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -82,9 +79,7 @@ public class SearchActivity extends AppCompatActivity {
         });
 
         ImageButton clearButton = findViewById(R.id.clearText);
-        clearButton.setOnClickListener(v -> {
-            searchText.setText("");
-        });
+        clearButton.setOnClickListener(v -> searchText.setText(""));
     }
 
     @Override
@@ -99,9 +94,9 @@ public class SearchActivity extends AppCompatActivity {
         }
     }
 
-    private class SearchHandler extends Handler {
-        private SearchRecyclerAdapter adapter;
-        private RelativeLayout loadingPanel;
+    private static class SearchHandler extends Handler {
+        private final SearchRecyclerAdapter adapter;
+        private final RelativeLayout loadingPanel;
 
         private SearchHandler(SearchRecyclerAdapter adapter, RelativeLayout loadingPanel) {
             this.adapter = adapter;
@@ -132,33 +127,16 @@ public class SearchActivity extends AppCompatActivity {
             if (!running) {
                 return;
             }
-            if (query.isEmpty()) {
-                sendMessage();
-                return;
-            }
-            DataCache dataCache = DataCache.getInstance();
-            Person[] persons = dataCache.getPersons();
-            Event[] events = dataCache.getEvents();
-            for (Person person : persons) {
-                if (containsIgnoreCase(person.getFirstName(), query) ||
-                    containsIgnoreCase(person.getLastName(), query)) {
-                    searchResults.add(new SearchResult(person));
-                }
-            }
+
+            DataProcessor.searchPersons(searchResults, query);
             if (!running) {
                 searchResults.clear();
                 return;
             }
-            for (Event event : events) {
-                if (containsIgnoreCase(event.getCountry(), query) ||
-                    containsIgnoreCase(event.getCity(), query) ||
-                    containsIgnoreCase(event.getEventType(), query) ||
-                    containsIgnoreCase(String.valueOf(event.getYear()), query)) {
-
-                    Person person = getPersonByID(event.getPersonID(), persons);
-                    assert person != null;
-                    searchResults.add(new SearchResult(event, person.getFirstName(), person.getLastName()));
-                }
+            DataProcessor.searchEvents(searchResults, query);
+            if (!running) {
+                searchResults.clear();
+                return;
             }
             sendMessage();
         }
@@ -170,36 +148,6 @@ public class SearchActivity extends AppCompatActivity {
 
         protected void interrupt() {
             running = false;
-        }
-
-        private boolean containsIgnoreCase(String src, String what) {
-            final int length = what.length();
-            if (length == 0)
-                return true; // Empty string is contained
-
-            final char firstLo = Character.toLowerCase(what.charAt(0));
-            final char firstUp = Character.toUpperCase(what.charAt(0));
-
-            for (int i = src.length() - length; i >= 0; i--) {
-                // Quick check before calling the more expensive regionMatches() method:
-                final char ch = src.charAt(i);
-                if (ch != firstLo && ch != firstUp)
-                    continue;
-
-                if (src.regionMatches(true, i, what, 0, length))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private Person getPersonByID(String id, Person[] persons) {
-            for (Person person : persons) {
-                if (person.getPersonID().equals(id)) {
-                    return person;
-                }
-            }
-            return null;
         }
     }
 }

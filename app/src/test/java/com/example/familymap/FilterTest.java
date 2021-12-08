@@ -1,20 +1,15 @@
 package com.example.familymap;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.test.mock.MockContext;
-
-import androidx.preference.PreferenceManager;
 
 import com.github.ivanshafran.sharedpreferencesmock.SPMockBuilder;
 
-import net.jakehamzawi.familymap.DataCache;
-import net.jakehamzawi.familymap.R;
+import net.jakehamzawi.familymap.data.DataCache;
 import net.jakehamzawi.familymap.ServerProxy;
 
-import org.junit.After;
+import static org.junit.Assert.*;
+
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import java.util.HashMap;
@@ -62,13 +57,15 @@ public class FilterTest {
         prefs.edit().putBoolean("male", true).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
         Person[] filteredPersons = dataCache.getPersons();
-        Assert.assertEquals(personMap.size() / 2 + 1, filteredPersons.length);
+        assertEquals(personMap.size() / 2 + 1, filteredPersons.length);
         for (Person person : dataCache.getPersons()) {
-            Assert.assertNotEquals("f", person.getGender());
+            assertNotEquals("f", person.getGender());
         }
 
         for (Event event : dataCache.getEvents()) {
-            Assert.assertNotEquals("f", personMap.get(event.getPersonID()).getGender());
+            Person person = personMap.get(event.getPersonID());
+            assert person != null;
+            assertNotEquals("f", person.getGender());
         }
     }
 
@@ -78,35 +75,54 @@ public class FilterTest {
         prefs.edit().putBoolean("female", true).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
         Person[] filteredPersons = dataCache.getPersons();
-        Assert.assertEquals(personMap.size() / 2, filteredPersons.length);
+
+        assertEquals(personMap.size() / 2, filteredPersons.length);
         for (Person person : dataCache.getPersons()) {
-            Assert.assertNotEquals("m", person.getGender());
+            assertNotEquals("m", person.getGender());
         }
 
         for (Event event : dataCache.getEvents()) {
-            Assert.assertNotEquals("m", personMap.get(event.getPersonID()).getGender());
+            Person person = personMap.get(event.getPersonID());
+            assert person != null;
+            assertNotEquals("m", person.getGender());
         }
     }
 
     @Test
-    public void filterFamily() {
+    public void filterBothSettingsOn() {
         SharedPreferences prefs = new SPMockBuilder().createSharedPreferences();
-        prefs.edit().putBoolean("family_lines", true).commit();
+        prefs.edit().putBoolean("female", true).commit();
+        prefs.edit().putBoolean("male", true).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
+        Person[] filteredPersons = dataCache.getPersons();
 
-        Person rootPerson = personMap.get(dataCache.getUser().getPersonID());
-        Assert.assertNotNull(rootPerson);
-
-        HashMap<String, Person> familyMap = new HashMap<>();
-        addFamilyMember(rootPerson, familyMap);
-
+        assertEquals(personMap.size(), filteredPersons.length);
+        boolean foundFemale = false;
+        boolean foundMale = false;
         for (Person person : dataCache.getPersons()) {
-            Assert.assertNotNull(personMap.get(person.getPersonID()));
+            if (person.getGender().equalsIgnoreCase("m")) foundMale = true;
+            else if (person.getGender().equalsIgnoreCase("f")) foundFemale = true;
         }
+        assertTrue(foundFemale);
+        assertTrue(foundMale);
 
+        foundFemale = false;
+        foundMale = false;
         for (Event event : dataCache.getEvents()) {
-            Assert.assertNotNull(personMap.get(event.getPersonID()));
+            Person person = personMap.get(event.getPersonID());
+            assert person != null;
+            if (person.getGender().equalsIgnoreCase("m")) foundMale = true;
+            else if (person.getGender().equalsIgnoreCase("f")) foundFemale = true;
         }
+        assertTrue(foundFemale);
+        assertTrue(foundMale);
+    }
+
+
+    @AfterClass
+    public static void cleanUp() {
+        ServerProxy proxy = new ServerProxy();
+        proxy.clear(HOST, PORT);
     }
 
     private void addFamilyMember(Person person, HashMap<String, Person> familyMap) {
@@ -116,13 +132,6 @@ public class FilterTest {
         addFamilyMember(mother, familyMap);
         addFamilyMember(father, familyMap);
         familyMap.put(person.getPersonID(), person);
-    }
-
-
-    @AfterClass
-    public static void cleanUp() {
-        ServerProxy proxy = new ServerProxy();
-        proxy.clear(HOST, PORT);
     }
 
 }

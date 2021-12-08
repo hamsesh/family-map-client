@@ -1,4 +1,4 @@
-package net.jakehamzawi.familymap;
+package net.jakehamzawi.familymap.adapter;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -14,6 +14,7 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import net.jakehamzawi.familymap.R;
 import net.jakehamzawi.familymap.model.FamilyMember;
 
 import model.Event;

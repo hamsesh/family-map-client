@@ -1,7 +1,6 @@
-package net.jakehamzawi.familymap;
+package net.jakehamzawi.familymap.data;
 
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
@@ -9,13 +8,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import model.*;
 
 public class DataCache {
-    static final String[] PREF_KEYS = { "mother_side", "father_side", "female", "male" };
-
     private static DataCache instance;
     private User user;
     private AuthToken authToken;

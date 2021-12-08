@@ -1,4 +1,4 @@
-package net.jakehamzawi.familymap;
+package net.jakehamzawi.familymap.adapter;
 
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -11,6 +11,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import net.jakehamzawi.familymap.EventActivity;
+import net.jakehamzawi.familymap.PersonActivity;
+import net.jakehamzawi.familymap.R;
 import net.jakehamzawi.familymap.model.SearchResult;
 
 import java.util.ArrayList;
@@ -37,10 +40,10 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
 
         public ViewHolder(View view) {
             super(view);
-            searchItem = (LinearLayout) view.findViewById(R.id.searchItem);
-            imageView = (ImageView) view.findViewById(R.id.searchImage);
-            mainInfo = (TextView) view.findViewById(R.id.mainInfo);
-            subInfo = (TextView) view.findViewById(R.id.subInfo);
+            searchItem = view.findViewById(R.id.searchItem);
+            imageView = view.findViewById(R.id.searchImage);
+            mainInfo = view.findViewById(R.id.mainInfo);
+            subInfo = view.findViewById(R.id.subInfo);
         }
 
         public LinearLayout getSearchItem() {
