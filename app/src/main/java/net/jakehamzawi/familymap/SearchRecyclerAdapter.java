@@ -1,9 +1,11 @@
 package net.jakehamzawi.familymap;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,6 +17,8 @@ import java.util.ArrayList;
 
 public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAdapter.ViewHolder> {
 
+    private static final String PERSON_KEY = "personID";
+    private static final String EVENT_KEY = "eventID";
     private final ArrayList<SearchResult> searchResults;
 
     public SearchRecyclerAdapter(ArrayList<SearchResult> searchResults) {
@@ -26,16 +30,21 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
      * (custom ViewHolder).
      */
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        private final LinearLayout searchItem;
         private final ImageView imageView;
         private final TextView mainInfo;
         private final TextView subInfo;
 
         public ViewHolder(View view) {
             super(view);
-            // TODO: Define click listener for the ViewHolder's View
+            searchItem = (LinearLayout) view.findViewById(R.id.searchItem);
             imageView = (ImageView) view.findViewById(R.id.searchImage);
             mainInfo = (TextView) view.findViewById(R.id.mainInfo);
             subInfo = (TextView) view.findViewById(R.id.subInfo);
+        }
+
+        public LinearLayout getSearchItem() {
+            return searchItem;
         }
 
         public ImageView getImageView() {
@@ -89,6 +98,21 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
             mainInfo.setText(result.getMainInfo());
             subInfo.setText(result.getSubInfo());
         }
+
+        LinearLayout searchItem = viewHolder.getSearchItem();
+        searchItem.setOnClickListener(v -> {
+            Intent intent;
+            if (result.getType() == SearchResult.Type.PERSON) {
+                intent = new Intent(searchItem.getContext(), PersonActivity.class);
+                intent.putExtra(PERSON_KEY, result.getId());
+
+            }
+            else {
+                intent = new Intent(searchItem.getContext(), EventActivity.class);
+                intent.putExtra(EVENT_KEY, result.getId());
+            }
+            searchItem.getContext().startActivity(intent);
+        });
     }
 
     // Return the size of your dataset (invoked by the layout manager)
