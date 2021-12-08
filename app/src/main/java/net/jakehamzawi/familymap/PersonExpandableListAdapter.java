@@ -1,10 +1,7 @@
 package net.jakehamzawi.familymap;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import android.content.Context;
 
@@ -20,7 +17,6 @@ import android.widget.TextView;
 import net.jakehamzawi.familymap.model.FamilyMember;
 
 import model.Event;
-import model.Person;
 
 public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
 
@@ -112,7 +108,7 @@ public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
             convertView = layoutInflater.inflate(R.layout.event_group, null);
         }
         TextView listTitleTextView = convertView
-                .findViewById(R.id.event_group_title);
+                .findViewById(R.id.eventGroupTitle);
         listTitleTextView.setTypeface(null, Typeface.BOLD);
         listTitleTextView.setText(listTitle);
         return convertView;
@@ -129,32 +125,32 @@ public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
     }
 
     private void writeEvent(View view, Event event) {
-        ImageView personImage = view.findViewById(R.id.row_image);
+        ImageView personImage = view.findViewById(R.id.rowImage);
         personImage.setImageResource(R.drawable.location);
 
         Resources res = view.getResources();
 
-        TextView mainText = view.findViewById(R.id.main_info);
+        TextView mainText = view.findViewById(R.id.mainInfo);
         String infoText = String.format(Locale.ROOT, "%s: %s, %s (%d)",
                 event.getEventType().toUpperCase(Locale.ROOT), event.getCity(),
                 event.getCountry(), event.getYear());
         mainText.setText(infoText);
 
-        TextView subText = view.findViewById(R.id.sub_info);
+        TextView subText = view.findViewById(R.id.subInfo);
         subText.setText(res.getString(R.string.person_name, firstName, lastName));
     }
 
     private void writeFamilyMember(View view, FamilyMember familyMember) {
-        ImageView personImage = view.findViewById(R.id.row_image);
+        ImageView personImage = view.findViewById(R.id.rowImage);
         personImage.setImageResource(familyMember.getPerson().getGender().equals("f") ? R.drawable.female
                 : R.drawable.male);
 
-        TextView mainText = view.findViewById(R.id.main_info);
+        TextView mainText = view.findViewById(R.id.mainInfo);
         String infoText = String.format(Locale.ROOT, "%s %s", familyMember.getPerson().getFirstName(),
                 familyMember.getPerson().getLastName());
         mainText.setText(infoText);
 
-        TextView subText = view.findViewById(R.id.sub_info);
+        TextView subText = view.findViewById(R.id.subInfo);
         subText.setText(familyMember.getRelation());
     }
 

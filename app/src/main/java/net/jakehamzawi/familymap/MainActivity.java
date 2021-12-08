@@ -30,12 +30,12 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
             if (!loggedIn()) {
                 Fragment fragment = createLoginFragment();
                 fragmentManager.beginTransaction()
-                        .replace(R.id.frame_layout, fragment, "main_fragment")
+                        .replace(R.id.frameLayout, fragment, "main_fragment")
                         .commit();
             } else {
                 Fragment fragment = new MapsFragment();
                 fragmentManager.beginTransaction()
-                        .replace(R.id.frame_layout, fragment, "main_fragment")
+                        .replace(R.id.frameLayout, fragment, "main_fragment")
                         .commit();
             }
         }
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
         Fragment fragment = new MapsFragment();
 
         fragmentManager.beginTransaction()
-                .replace(R.id.frame_layout, fragment)
+                .replace(R.id.frameLayout, fragment)
                 .commit();
     }
 
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.Lis
         if (!preferencesEqual(tempPrefs, PreferenceManager.getDefaultSharedPreferences(this))) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.frame_layout, new MapsFragment())
+                    .replace(R.id.frameLayout, new MapsFragment())
                     .commit();
         }
     }

@@ -7,7 +7,6 @@
     tools:context=".PersonActivity">
 
     <LinearLayout
-        android:id="@+id/settingsLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -26,7 +25,7 @@
             android:orientation="vertical"
             android:layout_marginHorizontal="@dimen/viewMargin" >
             <TextView
-                android:id="@+id/first_name_person"
+                android:id="@+id/firstNamePerson"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/personInfoText" />
@@ -40,7 +39,7 @@
                 android:layout_height="1dp"
                 android:background="@android:color/darker_gray" />
             <TextView
-                android:id="@+id/last_name_person"
+                android:id="@+id/lastNamePerson"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/personInfoText" />
@@ -54,7 +53,7 @@
                 android:layout_height="1dp"
                 android:background="@android:color/darker_gray" />
             <TextView
-                android:id="@+id/gender_person"
+                android:id="@+id/genderPerson"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/personInfoText" />
@@ -69,7 +68,7 @@
                 android:background="@android:color/darker_gray" />
 
             <ExpandableListView
-                android:id="@+id/exp_list"
+                android:id="@+id/expList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:groupIndicator="@drawable/selector"

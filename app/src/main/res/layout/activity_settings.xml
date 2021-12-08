@@ -7,8 +7,6 @@
     tools:context=".SettingsActivity">
 
     <LinearLayout
-
-        android:id="@+id/settingsLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -23,7 +21,7 @@
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
         <FrameLayout
-            android:id="@+id/settings_layout"
+            android:id="@+id/settingsLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 

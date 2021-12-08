@@ -45,4 +45,6 @@
     <string name="male_filter">Only show male family members</string>
     <string name="female_filter">Only show female family members</string>
     <string name="logout">Logout</string>
+    <!-- Strings related to search -->
+    <string name="clear_text">Clear</string>
 </resources>

@@ -4,22 +4,16 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NavUtils;
-import androidx.preference.PreferenceManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 
 import net.jakehamzawi.familymap.model.FamilyMember;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -141,16 +135,16 @@ public class PersonActivity extends AppCompatActivity {
     }
 
     private void setPersonInfo(Person person) {
-        TextView firstNameText = findViewById(R.id.first_name_person);
+        TextView firstNameText = findViewById(R.id.firstNamePerson);
         firstNameText.setText(person.getFirstName());
-        TextView lastNameText = findViewById(R.id.last_name_person);
+        TextView lastNameText = findViewById(R.id.lastNamePerson);
         lastNameText.setText(person.getLastName());
-        TextView genderText = findViewById(R.id.gender_person);
+        TextView genderText = findViewById(R.id.genderPerson);
         genderText.setText(person.getGender().equals("f") ? R.string.female : R.string.male);
     }
 
     private void createExpList(ArrayList<Event> events, ArrayList<FamilyMember> family, Person rootPerson) {
-        ExpandableListView listView = findViewById(R.id.exp_list);
+        ExpandableListView listView = findViewById(R.id.expList);
         String[] titles = { "LIFE EVENTS", "FAMILY" };
         adapter = new PersonExpandableListAdapter(this, titles, events,
                 family, rootPerson.getFirstName(), rootPerson.getLastName());

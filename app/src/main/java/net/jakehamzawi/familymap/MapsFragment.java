@@ -208,6 +208,7 @@ public class MapsFragment extends Fragment {
         }
         @Override
         public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
             Log.d("Maps", "Placing event locations...");
             DataCache dataCache = DataCache.getInstance();
             fragment.eventsOnMap.clear();
