@@ -27,7 +27,7 @@ public class SearchResult {
         this.id = event.getEventID();
         this.mainInfo = event.getEventType().toUpperCase(Locale.ROOT) + ": " +
                 event.getCity() + ", " + event.getCountry() + " (" +
-                String.valueOf(event.getYear()) + ")";
+                event.getYear() + ")";
         this.subInfo = firstName + " " + lastName;
         this.gender = null;
     }

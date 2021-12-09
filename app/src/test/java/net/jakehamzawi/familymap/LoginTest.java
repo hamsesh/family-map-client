@@ -1,6 +1,5 @@
-package com.example.familymap;
+package net.jakehamzawi.familymap;
 
-import net.jakehamzawi.familymap.data.DataCache;
 import net.jakehamzawi.familymap.ServerProxy;
 
 import static org.junit.Assert.*;
@@ -9,14 +8,12 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import model.AuthToken;
 import request.LoginRequest;
 import request.RegisterRequest;
 import result.LoginResult;
-import result.PersonResult;
 import result.RegisterResult;
 
-public class PersonsTest {
+public class LoginTest {
     private static final String HOST = "localhost";
     private static final String PORT = "8080";
 
@@ -28,33 +25,28 @@ public class PersonsTest {
         RegisterResult result = proxy.register(request, HOST, PORT);
     }
 
+
     @Test
-    public void getPersons() {
+    public void successfulLogin() {
         ServerProxy proxy = new ServerProxy();
         LoginRequest request = new LoginRequest("test", "secret");
-        LoginResult loginResult = proxy.login(request, HOST, PORT);
+        LoginResult result = proxy.login(request, HOST, PORT);
 
-        DataCache dataCache = DataCache.getInstance();
-        dataCache.setAuthToken(new AuthToken(loginResult.getAuthtoken(), loginResult.getUsername()));
-
-        PersonResult personResult = proxy.persons(HOST, PORT);
-
-        assertNotNull(personResult);
-        assertTrue(personResult.isSuccess());
-        assertNotNull(personResult.getData());
-        assertEquals(31, personResult.getData().length);
+        assertNotNull(result);
+        assertTrue(result.isSuccess());
+        assertNotNull(result.getAuthtoken());
+        assertNotNull(result.getUsername());
+        assertNotNull(result.getPersonID());
     }
 
     @Test
-    public void getPersonsWrongAuthToken() {
+    public void loginWrongPassword() {
         ServerProxy proxy = new ServerProxy();
-        DataCache dataCache = DataCache.getInstance();
-        dataCache.setAuthToken(new AuthToken("NULL", "test"));
-        PersonResult personResult = proxy.persons(HOST, PORT);
+        LoginRequest request = new LoginRequest("test", "wrong_pass");
+        LoginResult result = proxy.login(request, HOST, PORT);
 
-        assertNotNull(personResult);
-        assertFalse(personResult.isSuccess());
-        assertNull(personResult.getData());
+        assertNotNull(result);
+        assertFalse(result.isSuccess());
     }
 
     @AfterClass

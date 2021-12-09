@@ -1,4 +1,4 @@
-package com.example.familymap;
+package net.jakehamzawi.familymap;
 
 import android.content.SharedPreferences;
 

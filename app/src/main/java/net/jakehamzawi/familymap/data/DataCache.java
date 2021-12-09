@@ -103,6 +103,7 @@ public class DataCache {
         this.personMap = null;
         this.filteredPersons = null;
         this.filteredEvents = null;
+        this.colorMap.clear();
     }
 
     public Person getPersonByID(String id) {

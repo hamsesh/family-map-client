@@ -1,4 +1,4 @@
-package com.example.familymap;
+package net.jakehamzawi.familymap;
 
 import net.jakehamzawi.familymap.data.DataCache;
 import net.jakehamzawi.familymap.ServerProxy;
