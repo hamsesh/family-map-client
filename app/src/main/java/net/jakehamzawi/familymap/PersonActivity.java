@@ -17,6 +17,7 @@ import net.jakehamzawi.familymap.data.DataProcessor;
 import net.jakehamzawi.familymap.model.FamilyMember;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,10 +54,10 @@ public class PersonActivity extends AppCompatActivity {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        Callable<ArrayList<Event>> eventCall = new EventTask(personID);
-        Future<ArrayList<Event>> eventFuture = executor.submit(eventCall);
-        Callable<ArrayList<FamilyMember>> familyCall = new FamilyTask(personID);
-        Future<ArrayList<FamilyMember>> familyFuture = executor.submit(familyCall);
+        Callable<List<Event>> eventCall = new EventTask(personID);
+        Future<List<Event>> eventFuture = executor.submit(eventCall);
+        Callable<List<FamilyMember>> familyCall = new FamilyTask(personID);
+        Future<List<FamilyMember>> familyFuture = executor.submit(familyCall);
 
         try {
             createExpList(eventFuture.get(), familyFuture.get(), person);
@@ -65,7 +66,7 @@ public class PersonActivity extends AppCompatActivity {
         }
     }
 
-    private static class EventTask implements Callable<ArrayList<Event>> {
+    private static class EventTask implements Callable<List<Event>> {
         private final String personID;
 
         public EventTask(String personID) {
@@ -73,7 +74,7 @@ public class PersonActivity extends AppCompatActivity {
         }
 
         @Override
-        public ArrayList<Event> call() {
+        public List<Event> call() {
             DataCache dataCache = DataCache.getInstance();
             ArrayList<Event> personEvents = new ArrayList<>();
             for (Event event : dataCache.getEvents()) {
@@ -81,11 +82,12 @@ public class PersonActivity extends AppCompatActivity {
                     personEvents.add(event);
                 }
             }
-            return DataProcessor.sortEvents(personEvents);
+            personEvents.sort(new Event.EventComparator());
+            return personEvents;
         }
     }
 
-    private static class FamilyTask implements Callable<ArrayList<FamilyMember>> {
+    private static class FamilyTask implements Callable<List<FamilyMember>> {
         private final String personID;
 
         public FamilyTask(String personID) {
@@ -93,7 +95,7 @@ public class PersonActivity extends AppCompatActivity {
         }
 
         @Override
-        public ArrayList<FamilyMember> call() {
+        public List<FamilyMember> call() {
             DataCache dataCache = DataCache.getInstance();
             Person rootPerson = dataCache.getPersonByID(personID);
             return DataProcessor.findFamily(rootPerson);
@@ -121,7 +123,7 @@ public class PersonActivity extends AppCompatActivity {
         genderText.setText(person.getGender().equals("f") ? R.string.female : R.string.male);
     }
 
-    private void createExpList(ArrayList<Event> events, ArrayList<FamilyMember> family, Person rootPerson) {
+    private void createExpList(List<Event> events, List<FamilyMember> family, Person rootPerson) {
         ExpandableListView listView = findViewById(R.id.expList);
         String[] titles = { "LIFE EVENTS", "FAMILY" };
         adapter = new PersonExpandableListAdapter(this, titles, events,

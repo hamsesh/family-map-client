@@ -65,7 +65,7 @@ public class EventSortTest {
         }
 
         for (Map.Entry<Person, List<Event>> entry : dataMap.entrySet()) {
-            dataMap.replace(entry.getKey(), DataProcessor.sortEvents(entry.getValue()));
+            entry.getValue().sort(new Event.EventComparator());
         }
 
         for (Map.Entry<Person, List<Event>> entry : dataMap.entrySet()) {
@@ -87,11 +87,11 @@ public class EventSortTest {
                 10f, "USA", "Folsom", "Death", 1999);
 
         List<Event> events = Stream.of(event1, event3, event2).collect(Collectors.toList());
-        ArrayList<Event> sortedEvents = DataProcessor.sortEvents(events);
+        events.sort(new Event.EventComparator());
 
-        assertEquals("Birth", sortedEvents.get(0).getEventType());
-        assertEquals("Test", sortedEvents.get(1).getEventType());
-        assertEquals("Death", sortedEvents.get(2).getEventType());
+        assertEquals("Birth", events.get(0).getEventType());
+        assertEquals("Test", events.get(1).getEventType());
+        assertEquals("Death", events.get(2).getEventType());
     }
 
     @Test
@@ -102,10 +102,10 @@ public class EventSortTest {
                 10f, "USA", "Folsom", "Death", 1999);
 
         List<Event> events = Stream.of(event2, event1).collect(Collectors.toList());
-        ArrayList<Event> sortedEvents = DataProcessor.sortEvents(events);
+        events.sort(new Event.EventComparator());
 
-        assertEquals("Birth", sortedEvents.get(0).getEventType());
-        assertEquals("Death", sortedEvents.get(1).getEventType());
+        assertEquals("Birth", events.get(0).getEventType());
+        assertEquals("Death", events.get(1).getEventType());
     }
 
     @AfterClass

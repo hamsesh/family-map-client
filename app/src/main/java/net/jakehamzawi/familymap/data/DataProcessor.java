@@ -4,6 +4,7 @@ import net.jakehamzawi.familymap.model.FamilyMember;
 import net.jakehamzawi.familymap.model.SearchResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -38,11 +39,6 @@ public class DataProcessor {
         }
         familyMembers.sort(new FamilyMember.FamilyMemberComparator());
         return familyMembers;
-    }
-
-    public static ArrayList<Event> sortEvents(List<Event> events) {
-        Set<Event> sortedEvents = new TreeSet<>(events);
-        return new ArrayList<>(sortedEvents);
     }
 
     public static void searchPersons(List<SearchResult> results, String query) {

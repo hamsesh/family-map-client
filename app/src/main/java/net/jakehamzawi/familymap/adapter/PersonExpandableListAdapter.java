@@ -1,6 +1,6 @@
 package net.jakehamzawi.familymap.adapter;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import android.content.Context;
@@ -23,13 +23,13 @@ public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
 
     private final Context context;
     private final String[] expandableListTitle;
-    private final ArrayList<Event> events;
-    private final ArrayList<FamilyMember> familyMembers;
+    private final List<Event> events;
+    private final List<FamilyMember> familyMembers;
     private final String firstName;
     private final String lastName;
 
     public PersonExpandableListAdapter(Context context, String[] expandableListTitle,
-                                       ArrayList<Event> events, ArrayList<FamilyMember> family,
+                                       List<Event> events, List<FamilyMember> family,
                                        String firstName, String lastName) {
         this.context = context;
         this.expandableListTitle = expandableListTitle;
