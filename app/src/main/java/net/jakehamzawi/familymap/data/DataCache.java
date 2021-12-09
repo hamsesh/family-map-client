@@ -120,20 +120,32 @@ public class DataCache {
         this.filteredPersons.clear();
         Person rootPerson = this.personMap.get(this.user.getPersonID());
         assert rootPerson != null;
+        Person spouse = this.personMap.get(rootPerson.getSpouseID());
         if (male || female) {
             if (male) {
                 if (rootPerson.getGender().equals("m")) {
                     filteredPersons.put(rootPerson.getPersonID(), rootPerson);
+                }
+                if (spouse != null) {
+                    if (spouse.getGender().equalsIgnoreCase("m")) {
+                        filteredPersons.put(spouse.getPersonID(), spouse);
+                    }
                 }
             }
             else {
                 if (rootPerson.getGender().equals("f")) {
                     filteredPersons.put(rootPerson.getPersonID(), rootPerson);
                 }
+                if (spouse != null) {
+                    if (spouse.getGender().equalsIgnoreCase("f")) {
+                        filteredPersons.put(spouse.getPersonID(), spouse);
+                    }
+                }
             }
         }
         else {
             filteredPersons.put(rootPerson.getPersonID(), rootPerson);
+            if (spouse != null) filteredPersons.put(spouse.getPersonID(), spouse);
         }
 
         Person mother = this.personMap.get(rootPerson.getMotherID());
