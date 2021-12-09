@@ -20,12 +20,12 @@
     <SwitchPreferenceCompat
         app:key="father_side"
         app:title="@string/father_side"
-        app:defaultValue="false"
+        app:defaultValue="true"
         app:iconSpaceReserved="false" />
     <SwitchPreferenceCompat
         app:key="mother_side"
         app:title="@string/mother_side"
-        app:defaultValue="false"
+        app:defaultValue="true"
         app:iconSpaceReserved="false" />
     <SwitchPreferenceCompat
         app:key="male"

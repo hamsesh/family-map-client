@@ -146,18 +146,13 @@ public class DataCache {
 
         Person mother = this.personMap.get(rootPerson.getMotherID());
         Person father = this.personMap.get(rootPerson.getFatherID());
-        if (motherSide || fatherSide) {
-            if (motherSide) {
-                addLineage(mother, female, male);
-            }
-            if (fatherSide) {
-                addLineage(father, female, male);
-            }
-        }
-        else {
+        if (motherSide) {
             addLineage(mother, female, male);
+        }
+        if (fatherSide) {
             addLineage(father, female, male);
         }
+
         matchEventsToPersons();
     }
 

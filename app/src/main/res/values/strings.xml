@@ -40,8 +40,8 @@
     <string name="life_lines">Show life story lines</string>
     <string name="family_lines">Show family tree lines</string>
     <string name="spouse_lines">Show spouse lines</string>
-    <string name="father_side">Only show family members on father\'s side</string>
-    <string name="mother_side">Only show family members on mother\'s side</string>
+    <string name="father_side">Show events on father\'s side</string>
+    <string name="mother_side">Show events on mother\'s side</string>
     <string name="male_filter">Show male events</string>
     <string name="female_filter">Show female events</string>
     <string name="logout">Logout</string>
