@@ -30,9 +30,9 @@ public class DataProcessor {
                 familyMembers.add(new FamilyMember("Spouse", person));
             }
             else if (person.getFatherID() != null &&
-                    person.getFatherID().equals(person.getPersonID()) ||
+                    person.getFatherID().equals(rootPerson.getPersonID()) ||
                     person.getMotherID() != null &&
-                            person.getMotherID().equals(person.getPersonID())) {
+                            person.getMotherID().equals(rootPerson.getPersonID())) {
                 familyMembers.add(new FamilyMember("Child", person));
             }
         }
