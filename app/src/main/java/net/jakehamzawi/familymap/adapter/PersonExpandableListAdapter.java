@@ -41,7 +41,7 @@ public class PersonExpandableListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public Object getChild(int listPosition, int expandedListPosition) {
-        if (this.expandableListTitle[listPosition].equals("LIFE EVENTS")) { //FIXME: use resource
+        if (this.expandableListTitle[listPosition].equals("LIFE EVENTS")) {
             return events.get(expandedListPosition);
         }
         else {

@@ -30,12 +30,12 @@
     <SwitchPreferenceCompat
         app:key="male"
         app:title="@string/male_filter"
-        app:defaultValue="false"
+        app:defaultValue="true"
         app:iconSpaceReserved="false" />
     <SwitchPreferenceCompat
         app:key="female"
         app:title="@string/female_filter"
-        app:defaultValue="false"
+        app:defaultValue="true"
         app:iconSpaceReserved="false" />
 
 </PreferenceScreen>

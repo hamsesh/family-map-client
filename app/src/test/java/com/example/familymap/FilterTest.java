@@ -52,7 +52,7 @@ public class FilterTest {
     }
 
     @Test
-    public void filterFemales() {
+    public void showFemales() {
         SharedPreferences prefs = new SPMockBuilder().createSharedPreferences();
         prefs.edit().putBoolean("male", true).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
@@ -70,7 +70,7 @@ public class FilterTest {
     }
 
     @Test
-    public void filterMales() {
+    public void showMales() {
         SharedPreferences prefs = new SPMockBuilder().createSharedPreferences();
         prefs.edit().putBoolean("female", true).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
@@ -89,7 +89,7 @@ public class FilterTest {
     }
 
     @Test
-    public void filterBothSettingsOn() {
+    public void showNothing() {
         SharedPreferences prefs = new SPMockBuilder().createSharedPreferences();
         prefs.edit().putBoolean("female", true).commit();
         prefs.edit().putBoolean("male", true).commit();

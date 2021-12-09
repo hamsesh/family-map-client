@@ -42,8 +42,8 @@
     <string name="spouse_lines">Show spouse lines</string>
     <string name="father_side">Only show family members on father\'s side</string>
     <string name="mother_side">Only show family members on mother\'s side</string>
-    <string name="male_filter">Only show male family members</string>
-    <string name="female_filter">Only show female family members</string>
+    <string name="male_filter">Show male events</string>
+    <string name="female_filter">Show female events</string>
     <string name="logout">Logout</string>
     <!-- Strings related to search -->
     <string name="clear_text">Clear</string>
