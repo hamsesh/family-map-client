@@ -54,68 +54,37 @@ public class FilterTest {
     @Test
     public void showFemales() {
         SharedPreferences prefs = new SPMockBuilder().createSharedPreferences();
-        prefs.edit().putBoolean("male", true).commit();
+        prefs.edit().putBoolean("female", true).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
-        Person[] filteredPersons = dataCache.getPersons();
-        assertEquals(personMap.size() / 2 + 1, filteredPersons.length);
-        for (Person person : dataCache.getPersons()) {
-            assertNotEquals("f", person.getGender());
-        }
 
         for (Event event : dataCache.getEvents()) {
             Person person = personMap.get(event.getPersonID());
             assert person != null;
-            assertNotEquals("f", person.getGender());
+            assertEquals("f", person.getGender());
         }
     }
 
     @Test
     public void showMales() {
         SharedPreferences prefs = new SPMockBuilder().createSharedPreferences();
-        prefs.edit().putBoolean("female", true).commit();
+        prefs.edit().putBoolean("male", true).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
-        Person[] filteredPersons = dataCache.getPersons();
-
-        assertEquals(personMap.size() / 2, filteredPersons.length);
-        for (Person person : dataCache.getPersons()) {
-            assertNotEquals("m", person.getGender());
-        }
 
         for (Event event : dataCache.getEvents()) {
             Person person = personMap.get(event.getPersonID());
             assert person != null;
-            assertNotEquals("m", person.getGender());
+            assertEquals("m", person.getGender());
         }
     }
 
     @Test
     public void showNothing() {
         SharedPreferences prefs = new SPMockBuilder().createSharedPreferences();
-        prefs.edit().putBoolean("female", true).commit();
-        prefs.edit().putBoolean("male", true).commit();
+        prefs.edit().putBoolean("female", false).commit();
+        prefs.edit().putBoolean("male", false).commit();
         DataCache dataCache = DataCache.getFilteredInstance(prefs);
-        Person[] filteredPersons = dataCache.getPersons();
 
-        assertEquals(personMap.size(), filteredPersons.length);
-        boolean foundFemale = false;
-        boolean foundMale = false;
-        for (Person person : dataCache.getPersons()) {
-            if (person.getGender().equalsIgnoreCase("m")) foundMale = true;
-            else if (person.getGender().equalsIgnoreCase("f")) foundFemale = true;
-        }
-        assertTrue(foundFemale);
-        assertTrue(foundMale);
-
-        foundFemale = false;
-        foundMale = false;
-        for (Event event : dataCache.getEvents()) {
-            Person person = personMap.get(event.getPersonID());
-            assert person != null;
-            if (person.getGender().equalsIgnoreCase("m")) foundMale = true;
-            else if (person.getGender().equalsIgnoreCase("f")) foundFemale = true;
-        }
-        assertTrue(foundFemale);
-        assertTrue(foundMale);
+        assertEquals(0, dataCache.getEvents().length);
     }
 
 

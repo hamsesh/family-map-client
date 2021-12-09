@@ -243,7 +243,7 @@ public class MapsFragment extends Fragment {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             DataCache dataCache = DataCache.getFilteredInstance(prefs);
             filteredEvents = dataCache.getEvents();
-            filteredPersons = dataCache.getPersons();
+            filteredPersons = dataCache.getFilteredPersons();
             sendMessage();
         }
 
